@@ -1,0 +1,5 @@
+{
+  "path": "/opt/docker-database-server/",
+  "logging": "logging/",
+  "src": "src"
+}
