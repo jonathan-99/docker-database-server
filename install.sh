@@ -16,7 +16,7 @@ while read -r p ; do sudo "$p" -y ; done < <(cat << "EOF"
     apt-get upgrade
     pip3 install --upgrade setuptools
     pip3 install docker
-    pip3 install mysql
+    pip3 install mysql-connector-python
     pip3 install flask
 EOF
 )

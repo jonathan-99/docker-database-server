@@ -11,20 +11,20 @@ try:
     import time
     import logging
     import json
-    from class_file import config_data
-    # importing the class file for getting config data
+    from class_file import ConfigData
+    from sql_class import DataBase, InjectorCheck
 except Exception as e:
     print("importing error: ", e)
 
 
-def get_config() -> config_data:
+def get_config() -> ConfigData:
     """
     Get the config from a json file and return an object class of that data.
     """
     location = "config.json"
     type_of_file = "json"
 
-    config_data_object = config_data()
+    config_data_object = ConfigData()
     print("Path debug default ", location)
     if type_of_file == "json":
         try:
@@ -49,6 +49,40 @@ def get_config() -> config_data:
         config_data_object.set_logging_level()
     logging.debug("We found these configs: " + str(config_data_object.show_all()))
     return config_data_object
+
+
+def check_input(potentially_dodgy: str) -> str:
+    """
+    This needs to sanitise all user data coming in against the Robert') DROPS TABLE * vulnerability.
+    :param: potentially_dodgy (str) :
+    :return: potentially_safe (str) :
+    """
+    i = InjectorCheck()
+    if i.check_against_comment(potentially_dodgy):
+        potentially_safe = potentially_dodgy
+    else:
+        potentially_safe = "QWERTY"  # safe word
+    return potentially_safe
+
+
+def setup_database():
+    d = DataBase()
+    print("Check it was successfully setup", d.check_database_exists())
+
+
+def create_table(name: str, attributes: list) -> json:
+    if DataBase.add_table(name, attributes):
+        return DataBase.get_table(name)
+    else:
+        print("Error in creating table called: ", name)
+        logging.error("Error in creating table called {}".format(name))
+        return {
+            "Error": "Something went wrong in create_table"
+        }
+
+
+def get_table(name: str) -> json:
+    return DataBase.get_table(name)
 
 
 def get_all_data() -> json:
