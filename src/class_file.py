@@ -4,11 +4,13 @@ try:
     import csv
     import json
     import logging
+    import mysql.connector
+
 except ImportError as e:
     sys.exit("Importing error: " + str(e))
 
 
-class config_data:
+class ConfigData:
     """
     This holds and retrieves the config file for all other files to call on.
     """
