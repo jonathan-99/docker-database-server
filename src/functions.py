@@ -57,13 +57,16 @@ def check_input(potentially_dodgy: str) -> str:
     :param: potentially_dodgy (str) :
     :return: potentially_safe (str) :
     """
-    i = InjectorCheck()
-    if i.check_against_comment(potentially_dodgy):
+    i = InjectorCheck(potentially_dodgy)
+    if i.check_against_comment():
         potentially_safe = potentially_dodgy
     else:
         potentially_safe = "QWERTY"  # safe word
     return potentially_safe
 
+
+def check_table(name: str) -> bool:
+    return DataBase.check_table_exists(name)
 
 def setup_database():
     d = DataBase()
@@ -81,14 +84,16 @@ def create_table(name: str, attributes: list) -> json:
         }
 
 
+def add_data(input_data: list) -> json:
+    logging.debug("Add any time of data in functions.py")
+    return DataBase.add_data(input_data)
+
+
 def get_table(name: str) -> json:
+    logging.debug("Get table in functions.py")
     return DataBase.get_table(name)
 
 
 def get_all_data() -> json:
-    logging.debug("Get_all_data")
-    return {
-        "username": "username",
-        "theme": "theme",
-        "image": "image",
-    }
+    logging.debug("Get_all_data in functions.py")
+    return DataBase.check_database_exists()

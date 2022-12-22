@@ -1,5 +1,9 @@
 {
   "path": "/opt/docker-database-server/",
-  "logging": "logging/",
-  "src": "src"
+  "logging_path": "logging/",
+  "log_filename": "debugger.log",
+  "src": "src",
+  "data": "data/",
+  "simple-server-port": 7000,
+  "logging-level": "logging.DEBUG"
 }
