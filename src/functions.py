@@ -51,49 +51,30 @@ def get_config() -> ConfigData:
     return config_data_object
 
 
-def check_input(potentially_dodgy: str) -> str:
+def enact_mysql_command(command: str, data: str, injectorObject: InjectorCheck, dbObject: DataBase) -> json:
     """
-    This needs to sanitise all user data coming in against the Robert') DROPS TABLE * vulnerability.
-    :param: potentially_dodgy (str) :
-    :return: potentially_safe (str) :
+    A generic function which calls the mysql class and returns all data in json format.
+    :param command:
+    :param data:
+    :param injectorObject:
+    :param dbObject:
+    :return:
     """
-    i = InjectorCheck(potentially_dodgy)
-    if i.check_against_comment():
-        potentially_safe = potentially_dodgy
+    print("Enact_mysql_command: ", command)
+    logging.debug('Enact_mysql_command: {}'.format(command))
+
+    injectorObject.add(data)
+    check = injectorObject.check_against_comment()
+    if check:
+        if command == 'ADDTABLE':
+            output = dbObject.add_data('tab', data)
+        elif command == 'ADDDATA':
+            output = "temp"
+        elif command == 'GET-ALL':
+            output = dbObject.get_all_data()
+        else:
+            output = "temp"
+        print("enact_mysql_command() ", output)
+        return output
     else:
-        potentially_safe = "QWERTY"  # safe word
-    return potentially_safe
-
-
-def check_table(name: str) -> bool:
-    return DataBase.check_table_exists(name)
-
-def setup_database():
-    d = DataBase()
-    print("Check it was successfully setup", d.check_database_exists())
-
-
-def create_table(name: str, attributes: list) -> json:
-    if DataBase.add_table(name, attributes):
-        return DataBase.get_table(name)
-    else:
-        print("Error in creating table called: ", name)
-        logging.error("Error in creating table called {}".format(name))
-        return {
-            "Error": "Something went wrong in create_table"
-        }
-
-
-def add_data(input_data: list) -> json:
-    logging.debug("Add any time of data in functions.py")
-    return DataBase.add_data(input_data)
-
-
-def get_table(name: str) -> json:
-    logging.debug("Get table in functions.py")
-    return DataBase.get_table(name)
-
-
-def get_all_data() -> json:
-    logging.debug("Get_all_data in functions.py")
-    return DataBase.check_database_exists()
+        return "Error with input being dodgy"

@@ -3,6 +3,7 @@
 """
 This is the main python file running the flask app.
 """
+import flask
 
 try:
     import datetime
@@ -10,15 +11,18 @@ try:
     import sys
     import time
     import logging
-    from flask import Flask, render_template
+    from flask import Flask, jsonify
+    from flask import render_template
     import functions
     import json
     import jinja2
+    from class_file import ConfigData
+    from sql_class import DataBase, InjectorCheck
 except Exception as e:
     print("importing error: ", e)
 
 
-app = Flask(__name__, template_folder='../templates')
+app = flask.Flask(__name__, template_folder='../templates')
 
 
 @app.route('/')
@@ -36,13 +40,11 @@ def api_create_table(table_name) -> json:
     Simple api to get all data from database through functions.py
     :return:
     """
-    safe = functions.check_input(table_name)
-    db_exists = functions.check_table(safe)
-    if ("QWERTY" in safe) and db_exists:
-        outgoing = functions.get_all_data()
-    else:
-        outgoing = functions.create_table(safe)
-    return outgoing
+    logging.debug('api_create_table')
+    output = functions.enact_mysql_command('ADDTABLE', table_name, injector, db)
+    print("api_create_table: ", output)
+    return jsonify(output)
+
 
 @app.route("/add_data/<string:input_data>")
 def api_add_data(input_data) -> json:
@@ -52,12 +54,13 @@ def api_add_data(input_data) -> json:
     device-id : ip address
     table-name : weather
     data (list): "20221209 23", 12.3
-    :param (list) input_data:
+    :param (str) input_data:
     :return (json) output_data:
     """
-    # check input first
-    output_data = json.dumps(input_data)
-    return functions.add_data(output_data)
+    output = functions.enact_mysql_command('ADDDATA', input_data, injector, db)
+    print("api_add_data: ", output)
+    return jsonify(output)
+
 
 @app.route("/get-all-data")
 def api_get_all_data():
@@ -65,7 +68,9 @@ def api_get_all_data():
     Simple api to get all data from database through functions.py
     :return:
     """
-    return functions.get_all_data()
+    output = functions.enact_mysql_command('GET-ALL', 'THIS IS NOTHING', injector, db)
+    print("api_get_all_data: ", output)
+    return jsonify(output)
 
 
 if __name__ == '__main__':
@@ -73,4 +78,6 @@ if __name__ == '__main__':
     total_path = config.get_logging_path() + config.get_log_filename()
     logging.basicConfig(filename=total_path, level=config.get_logging_level())
 
-    app.run(debug=True, port=7000)
+    app.run(debug=True, host='127.0.0.1', port=7000)
+    db = DataBase()
+    injector = InjectorCheck()
