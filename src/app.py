@@ -3,7 +3,7 @@
 """
 This is the main python file running the flask app.
 """
-import flask
+
 
 try:
     import datetime
@@ -11,19 +11,19 @@ try:
     import sys
     import time
     import logging
+    import flask
     from flask import Flask, jsonify
     from flask import render_template
     import functions
     import json
     import jinja2
-    from class_file import ConfigData
-    from sql_class import DataBase, InjectorCheck
+    from flask_cors import CORS, cross_origin
 except Exception as e:
     print("importing error: ", e)
 
 
 app = flask.Flask(__name__, template_folder='../templates')
-
+CORS(app)
 
 @app.route('/')
 def index():
@@ -41,7 +41,8 @@ def api_create_table(table_name) -> json:
     :return:
     """
     logging.debug('api_create_table')
-    output = functions.enact_mysql_command('ADDTABLE', table_name, injector, db)
+
+    output = functions.enact_mysql_command('ADDTABLE', table_name)
     print("api_create_table: ", output)
     return jsonify(output)
 
@@ -57,7 +58,7 @@ def api_add_data(input_data) -> json:
     :param (str) input_data:
     :return (json) output_data:
     """
-    output = functions.enact_mysql_command('ADDDATA', input_data, injector, db)
+    output = functions.enact_mysql_command('ADDDATA', input_data)
     print("api_add_data: ", output)
     return jsonify(output)
 
@@ -68,7 +69,7 @@ def api_get_all_data():
     Simple api to get all data from database through functions.py
     :return:
     """
-    output = functions.enact_mysql_command('GET-ALL', 'THIS IS NOTHING', injector, db)
+    output = functions.enact_mysql_command('GET-ALL', 'THIS IS NOTHING')
     print("api_get_all_data: ", output)
     return jsonify(output)
 
@@ -79,5 +80,3 @@ if __name__ == '__main__':
     logging.basicConfig(filename=total_path, level=config.get_logging_level())
 
     app.run(debug=True, host='127.0.0.1', port=7000)
-    db = DataBase()
-    injector = InjectorCheck()

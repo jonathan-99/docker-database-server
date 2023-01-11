@@ -51,30 +51,26 @@ class Input_Format:
 class DataBase:
 
     def __init__(self):
-        logging.debug('Initiating a database')
+        logging.debug('Initiating a database object')
+        """
         self.mydb = mysql.connector.connect(
             host="localhost",
             user="yourusername",
             password="yourpassword"
         )
+        """
         self.mydb.table_name = []
 
         self.mydb.execute("CREATE DATABASE mydatabase")
         self.mydb.table_name = ['default']
 
-    def add_data(self, table_name: str, key: list) -> bool:
+    def add_data(self, table_name: str, key: list) -> str:
         sql = 'CREATE TABLE {} ({})'.format(table_name, key)
         print("sql: ", sql)
-        try:
-            self.mydb.execute(sql)
-            print("add_data: ", sql)
-            logging.info("Table {} created successfully.".format(table_name))
-            return True
-        except Exception as err:
-            logging.error("Error in creating a table: " + str(err))
-            return False
+        logging.info("Table {} created successfully.".format(table_name))
+        return sql
 
-    def get_data(self, type_of_request: str, data: str) -> json:
+    def get_data(self, type_of_request: str, data: str) -> str:
         """
         Types of request are: Table names, column names, everything, values from specific column.
         :param type_of_request: TABLES
@@ -82,22 +78,17 @@ class DataBase:
         :return:
         """
         if type_of_request == 'TABLES':
-            sql = 'SHOW {}'.format(type_of_request)
-            output = self.mydb.execute(sql)
+            output = 'SHOW {}'.format(type_of_request)
         elif type_of_request == 'COLUMN':
-            sql = 'SHOW TABLES'
-            self.mydb.execute(sql)
-            output = self.mydb.description
+            output = 'SHOW TABLES'
         elif type_of_request == 'SPECIFIC':
-            sql = 'SHOW TABLE {}'.format(data)
-            output = self.mydb.execute(sql)
+            output = 'SHOW TABLE {}'.format(data)
         else:
-            sql = 'SHOW *'
-            output = self.mydb.execute(sql)
+            output = 'SHOW *'
         return output
 
 
-    def get_all_data(self) -> json:
+    def get_all_data(self) -> str:
         """
         This will return a json of summary data of all tables.
         + Table names.
@@ -110,6 +101,6 @@ class DataBase:
         sql_statement_all = 'SHOW *'
         sql_statement_table = 'SHOW TABLES'
         column_headers = 'select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='
-        output = self.mydb.execute(sql_statement_all)
+        output = sql_statement_all
         print("Output: ", output)
         return output
