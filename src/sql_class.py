@@ -11,33 +11,36 @@ except ImportError as e:
 
 
 class InjectorCheck:
-    _comment = "--"
+    _concern = ['--', 'DEL', 'DELETE']
 
-    def __init__(self, incoming):
-        self.incoming = incoming
+    def __init__(self):
+        self.incoming = ""
 
-    def check_against_comment(self):
-        if self._comment in self.incoming:
+    def add(self, value) -> None:
+        self.incoming = value
+
+    def check_against_comment(self) -> bool:
+        if self._concern in self.incoming:
             # this is bad -> remove the comment?
             return False
         else:
             return True
 
 
-class input_format:
+class Input_Format:
     """
     A simple way of creating flexible table entry for any device.
     """
     def __init__(self):
         self.device_id = ""
-        self.table_name = ""
+        self.table_name = []
         self.key_value = []
 
     def add(self, name: str, type_of_data: str) -> bool:
         if type_of_data == "dev":
             self.device_id = name
         elif type_of_data == "tab":
-            self.table_name = name
+            self.table_name.append(name)
         elif type_of_data == "d":
             self.key_value.append(name)
         else:
@@ -48,64 +51,56 @@ class input_format:
 class DataBase:
 
     def __init__(self):
-        logging.debug('Initiating a database')
+        logging.debug('Initiating a database object')
+        """
         self.mydb = mysql.connector.connect(
             host="localhost",
             user="yourusername",
             password="yourpassword"
         )
+        """
+        self.mydb.table_name = []
 
         self.mydb.execute("CREATE DATABASE mydatabase")
+        self.mydb.table_name = ['default']
 
-    def check_database_exists(self):
-        logging.debug('Check if database exists.')
-        da = self.mydb.execute("SHOW DATABASES")
-        temp = []
-        for d in da:
-            temp.append(d)
-        output_data = json.dumps(temp)
-        return output_data
+    def add_data(self, table_name: str, key: list) -> str:
+        sql = 'CREATE TABLE {} ({})'.format(table_name, key)
+        print("sql: ", sql)
+        logging.info("Table {} created successfully.".format(table_name))
+        return sql
 
-    def check_table_exists(self, in_name) -> bool:
-        sql = 'SHOW TABLE' + str(in_name)
-        print("test: ", sql)
-        output_check = self.mydb.execute(sql)
-        logging.debug('Checked if table {} exists'.format(in_name))
-        if in_name in output_check:
-            return True
-        else:
-            return False
-
-    def add_table(self, name: str, key: list) -> bool:
-        try:
-            self.mydb.execute("CREATE TABLE {} ({}) ", name, key)
-            logging.info("Table {} created successfully.".format(name))
-            return True
-        except Exception as err:
-            logging.error("Error in creating a table: " + str(err))
-            return False
-
-    def get_table(self, name: str) -> json:
-        try:
-            return self.mydb.execute("SHOW {}".format(name))
-        except Exception as err:
-            logging.error("Error in finding table: " + str(err))
-
-    def add_data(self, input_data: list) -> json:
+    def get_data(self, type_of_request: str, data: str) -> str:
         """
-        Assume the data will come in the expected format...
-        :param input_data:
+        Types of request are: Table names, column names, everything, values from specific column.
+        :param type_of_request: TABLES
+        :param data:
+        :return:
+        """
+        if type_of_request == 'TABLES':
+            output = 'SHOW {}'.format(type_of_request)
+        elif type_of_request == 'COLUMN':
+            output = 'SHOW TABLES'
+        elif type_of_request == 'SPECIFIC':
+            output = 'SHOW TABLE {}'.format(data)
+        else:
+            output = 'SHOW *'
+        return output
+
+
+    def get_all_data(self) -> str:
+        """
+        This will return a json of summary data of all tables.
+        + Table names.
+        + Columns.
+        + Number of data points.
         :return: json
         """
-        i = input_format()
-        i.add(input_data[0], "dev")
-        i.add(input_data[1], "tab")
-        i.add(input_data[2], "d")
-        sql = 'INSERT INTO {} ({}) VALUES ({}) '.format(str(i.table_name), 'DATETIME, SPEED', i.key_value)
-        logging.debug("Sql statement for add: " + str(sql))
-        try:
-            self.mydb.execute(sql)
-            return {"response": "success"}
-        except Exception as err:
-            logging.error("Error adding data: " + str(err))
-            return {"response": "failure to add data to table"}
+        logging.debug("Get all data function")
+        print("within get_all_data")
+        sql_statement_all = 'SHOW *'
+        sql_statement_table = 'SHOW TABLES'
+        column_headers = 'select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='
+        output = sql_statement_all
+        print("Output: ", output)
+        return output
