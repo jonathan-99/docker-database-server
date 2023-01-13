@@ -56,7 +56,7 @@ def get_config() -> ConfigData:
     return config_data_object
 
 
-def enact_mysql_command(command: str, data: str, dbObject: DataBase) -> json:
+def enact_mysql_command(command: str, data: str, dbObject=None) -> json:
     """
     A generic function which calls the mysql class and returns all data in json format.
     :param command:
@@ -70,7 +70,7 @@ def enact_mysql_command(command: str, data: str, dbObject: DataBase) -> json:
 
     try:
         cnx = mysql.connector.connect(user='root', database='mydatabase')
-        mycursur = cnx.cursor()
+        mycursor = cnx.cursor()
         injectorObject = InjectorCheck()
 
         injectorObject.add(data)
@@ -78,7 +78,7 @@ def enact_mysql_command(command: str, data: str, dbObject: DataBase) -> json:
         if check:
             if command == 'ADDTABLE':
                 sql_statement = dbObject.add_data('tab', data)
-                output = mycursur.execute(sql_statement)
+                output = mycursor.execute(sql_statement)
             elif command == 'ADDDATA':
                 output = "temp"
             elif command == 'GET-ALL':
@@ -99,5 +99,5 @@ def enact_mysql_command(command: str, data: str, dbObject: DataBase) -> json:
             print(err)
     else:
         cnx.commit()
-        mycursur.close()
+        mycursor.close()
         cnx.close()
