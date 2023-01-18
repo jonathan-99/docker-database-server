@@ -17,13 +17,11 @@ try:
     import functions
     import json
     import jinja2
-    from flask_cors import CORS, cross_origin
 except Exception as e:
     print("importing error: ", e)
 
 
 app = flask.Flask(__name__, template_folder='../templates')
-CORS(app)
 
 @app.route('/')
 def index():
@@ -47,8 +45,8 @@ def api_create_table(table_name) -> json:
     return jsonify(output)
 
 
-@app.route("/add_data/<string:input_data>")
-def api_add_data(input_data) -> json:
+@app.route("/add_data/<string:table_name>/<string:input_data>")
+def api_add_data(table_name, input_data) -> json:
     """
     This takes data from any source, containing any data, and adds it to a known table.
     requires input_data to be in the following format.
@@ -58,7 +56,7 @@ def api_add_data(input_data) -> json:
     :param (str) input_data:
     :return (json) output_data:
     """
-    output = functions.enact_mysql_command('ADDDATA', input_data)
+    output = functions.enact_mysql_command('ADDDATA', table_name, input_data)
     print("api_add_data: ", output)
     return jsonify(output)
 

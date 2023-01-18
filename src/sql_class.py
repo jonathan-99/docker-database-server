@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 try:
     import os
     import sys
@@ -6,46 +8,10 @@ try:
     import logging
     import re
     import mysql.connector
+    from mysql.connector import errorcode
+    from config import mysql
 except ImportError as e:
     sys.exit("Importing error: " + str(e))
-
-
-class InjectorCheck:
-    _concern = ['--', 'DEL', 'DELETE']
-
-    def __init__(self):
-        self.incoming = ""
-
-    def add(self, value) -> None:
-        self.incoming = value
-
-    def check_against_comment(self) -> bool:
-        if self._concern in self.incoming:
-            # this is bad -> remove the comment?
-            return False
-        else:
-            return True
-
-
-class Input_Format:
-    """
-    A simple way of creating flexible table entry for any device.
-    """
-    def __init__(self):
-        self.device_id = ""
-        self.table_name = []
-        self.key_value = []
-
-    def add(self, name: str, type_of_data: str) -> bool:
-        if type_of_data == "dev":
-            self.device_id = name
-        elif type_of_data == "tab":
-            self.table_name.append(name)
-        elif type_of_data == "d":
-            self.key_value.append(name)
-        else:
-            return False
-        return True
 
 
 class DataBase:
@@ -59,14 +25,34 @@ class DataBase:
             password="yourpassword"
         )
         """
-        self.mydb.table_name = []
 
-        self.mydb.execute("CREATE DATABASE mydatabase")
-        self.mydb.table_name = ['default']
+    def add_data(self, add_type: str, table_name: str, key: list) -> str:
+        sql = ""
+        if add_type == 'ADDTABLE':
+            sql = "CREATE TABLE {}".format(table_name)
+        elif add_type == 'ADDDATA':
+            sql = "INSERT TABLE {} ({})".format(table_name, key)
+        else:
+            pass
+        try:
+            cnx = mysql.connector.connect(user='root', database='mydatabase')
+            mycursor = cnx.cursor()
 
-    def add_data(self, table_name: str, key: list) -> str:
-        sql = 'CREATE TABLE {} ({})'.format(table_name, key)
-        print("sql: ", sql)
+        # check the table exists first
+
+            print("sql: ", sql)
+            mycursor.execute(sql)
+        except mysql.connector.Error as err:
+            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                print("Something is wrong with your user name or password")
+            elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                print("Database does not exist")
+            else:
+                print(err)
+        else:
+            cnx.commit()
+            mycursor.close()
+            cnx.close()
         logging.info("Table {} created successfully.".format(table_name))
         return sql
 
@@ -86,7 +72,6 @@ class DataBase:
         else:
             output = 'SHOW *'
         return output
-
 
     def get_all_data(self) -> str:
         """
