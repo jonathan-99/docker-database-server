@@ -9,7 +9,6 @@ try:
     import re
     import mysql.connector
     from mysql.connector import errorcode
-    from config import mysql
 except ImportError as e:
     sys.exit("Importing error: " + str(e))
 
@@ -26,6 +25,38 @@ class DataBase:
         )
         """
 
+    def send_sql(self, sql: str) -> str:
+        print("in send_sql...", type(sql), sql)
+        output = {'beginning': 'end'}
+        try:
+            cnx = mysql.connector.connect(
+                user='user',
+                password='password',
+                host='127.0.0.1',
+                port=3306,
+                # database='mydatabase'
+            )
+            mycursor = cnx.cursor()
+
+            # check the table exists first
+
+            output = mycursor.execute(sql)
+        except mysql.connector.Error as err:
+            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                print("Something is wrong with your user name or password")
+            elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                print("Database does not exist")
+            else:
+                print(err)
+                output = 'Error here' + str(err)
+        else:
+            cnx.commit()
+            mycursor.close()
+            cnx.close()
+            output = "Error in send_sql"
+        logging.info("Sql done {}".format(sql))
+        return output
+
     def add_data(self, add_type: str, table_name: str, key: list) -> str:
         sql = ""
         if add_type == 'ADDTABLE':
@@ -34,27 +65,9 @@ class DataBase:
             sql = "INSERT TABLE {} ({})".format(table_name, key)
         else:
             pass
-        try:
-            cnx = mysql.connector.connect(user='root', database='mydatabase')
-            mycursor = cnx.cursor()
-
-        # check the table exists first
-
-            print("sql: ", sql)
-            mycursor.execute(sql)
-        except mysql.connector.Error as err:
-            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                print("Something is wrong with your user name or password")
-            elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                print("Database does not exist")
-            else:
-                print(err)
-        else:
-            cnx.commit()
-            mycursor.close()
-            cnx.close()
-        logging.info("Table {} created successfully.".format(table_name))
-        return sql
+        output = self.send_sql(sql)
+        print('add_data: ', output, type(output))
+        return {'return': output}
 
     def get_data(self, type_of_request: str, data: str) -> str:
         """
@@ -64,14 +77,15 @@ class DataBase:
         :return:
         """
         if type_of_request == 'TABLES':
-            output = 'SHOW {}'.format(type_of_request)
+            sql = 'SHOW {}'.format(type_of_request)
         elif type_of_request == 'COLUMN':
-            output = 'SHOW TABLES'
+            sql = 'SHOW TABLES'
         elif type_of_request == 'SPECIFIC':
-            output = 'SHOW TABLE {}'.format(data)
+            sql = 'SHOW TABLE {}'.format(data)
         else:
-            output = 'SHOW *'
-        return output
+            sql = 'SHOW *'
+        output = self.send_sql(sql)
+        return {'output from get': output}
 
     def get_all_data(self) -> str:
         """

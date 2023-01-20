@@ -7,7 +7,7 @@ class InjectorCheck:
         self.incoming = ""
 
     def add(self, value) -> None:
-        self.incoming = value
+        self.incoming = str(value)
 
     def check_against_comment(self) -> bool:
         if self._concern in self.incoming:
