@@ -65,25 +65,24 @@ def enact_mysql_command(command: str, table_name: str, data: str) -> json:
     print("Enact_mysql_command: ", command)
     logging.debug('Enact_mysql_command: {}'.format(command))
 
-    injectorObject = InjectorCheck()
-
-    injectorObject.add(data)
-    check = injectorObject.check_against_comment()
+    # injectorObject = InjectorCheck()
+    # injectorObject.add(str(data))
+    # check = injectorObject.check_against_comment()
+    check = True
     if check:
         if command == 'ADDTABLE':
             a = DataBase()
-            output = a.add_data('ADDTABLE', table_name)
-            a.close()
+            output = a.add_data('ADDTABLE', table_name, '')
         elif command == 'ADDDATA':
             a = DataBase()
             output = a.add_data('ADDDATA', table_name, data)
-            a.close()
-        elif command == 'GET-ALL':
-            output = dbObject.get_all_data()
+        elif command == 'GET-DATA':
+            a = DataBase()
+            output = a.get_data(table_name, data)
         else:
-            output = "temp"
+            output = {'temp': 'these needs doing'}
         print("enact_mysql_command() ", output)
-        return jsonify(output)
+        return output
     else:
-        return "Error with input being dodgy"
+        return {'Error with input being dodgy': 'something'}
 

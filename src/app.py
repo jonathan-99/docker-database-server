@@ -17,11 +17,13 @@ try:
     import functions
     import json
     import jinja2
+    import os
 except Exception as e:
     print("importing error: ", e)
 
-
 app = flask.Flask(__name__, template_folder='../templates')
+os.system('sudo /etc/init.d/mysql start')
+
 
 @app.route('/')
 def index():
@@ -40,18 +42,18 @@ def api_create_table(table_name) -> json:
     """
     logging.debug('api_create_table')
 
-    output = functions.enact_mysql_command('ADDTABLE', table_name)
+    output = functions.enact_mysql_command('ADDTABLE', table_name, '')
     print("api_create_table: ", output)
     return jsonify(output)
 
 
 @app.route("/add_data/<string:table_name>/<string:input_data>")
-def api_add_data(table_name, input_data) -> json:
+def api_add_data(table_name: str, input_data) -> json:
     """
     This takes data from any source, containing any data, and adds it to a known table.
     requires input_data to be in the following format.
     device-id : ip address
-    table-name : weather
+    table_name : weather
     data (list): "20221209 23", 12.3
     :param (str) input_data:
     :return (json) output_data:
@@ -61,13 +63,13 @@ def api_add_data(table_name, input_data) -> json:
     return jsonify(output)
 
 
-@app.route("/get-all-data")
-def api_get_all_data():
+@app.route("/get/<string:get_what>")
+def api_get_data(get_what: str):
     """
     Simple api to get all data from database through functions.py
     :return:
     """
-    output = functions.enact_mysql_command('GET-ALL', 'THIS IS NOTHING')
+    output = functions.enact_mysql_command('GET-DATA', get_what, '')
     print("api_get_all_data: ", output)
     return jsonify(output)
 
