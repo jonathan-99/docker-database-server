@@ -11,26 +11,25 @@ try:
     import time
     import logging
     import json
-    from class_file import ConfigData
-    from sql_class import DataBase
-    from injection_class import InjectorCheck
+    from src.class_file import ConfigData
+    from src.sql_class import DataBase
+    from src.injection_class import InjectorCheck
     from flask import jsonify
 except Exception as e:
     print("importing error: ", e)
 
 
-def get_config() -> ConfigData:
+def get_config(default_location='config.json') -> ConfigData:
     """
     Get the config from a json file and return an object class of that data.
     """
-    location = "config.json"
     type_of_file = "json"
 
     config_data_object = ConfigData()
-    print("Path debug default ", location)
+    print("Path debug default ", default_location)
     if type_of_file == "json":
         try:
-            f = open(location)
+            f = open(default_location)
             data = json.load(f)
             f.close()
             config_data_object.set_path(data["path"])
@@ -58,17 +57,15 @@ def enact_mysql_command(command: str, table_name: str, data: str) -> json:
     A generic function which calls the mysql class and returns all data in json format.
     :param command:
     :param data:
-    :param injectorObject:
-    :param dbObject:
-    :return:
+    :return: json
     """
-    print("Enact_mysql_command: ", command)
     logging.debug('Enact_mysql_command: {}'.format(command))
 
     # injectorObject = InjectorCheck()
     # injectorObject.add(str(data))
     # check = injectorObject.check_against_comment()
     check = True
+
     if check:
         if command == 'ADDTABLE':
             a = DataBase()
@@ -81,7 +78,7 @@ def enact_mysql_command(command: str, table_name: str, data: str) -> json:
             output = a.get_data(table_name, data)
         else:
             output = {'temp': 'these needs doing'}
-        print("enact_mysql_command() ", output)
+        logging.debug("enact_mysql_command() " + str(output))
         return output
     else:
         return {'Error with input being dodgy': 'something'}

@@ -14,7 +14,7 @@ try:
     import flask
     from flask import Flask, jsonify
     from flask import render_template
-    import functions
+    import functions, config, incoming_data_class, injection_class, sql_class
     import json
     import jinja2
     import os
@@ -22,7 +22,7 @@ except Exception as e:
     print("importing error: ", e)
 
 app = flask.Flask(__name__, template_folder='../templates')
-os.system('sudo /etc/init.d/mysql start')
+# os.system('sudo /etc/init.d/mysql start')
 
 
 @app.route('/')
@@ -69,10 +69,34 @@ def api_get_data(get_what: str):
     Simple api to get all data from database through functions.py
     :return:
     """
-    output = functions.enact_mysql_command('GET-DATA', get_what, '')
+    temp_output = functions.enact_mysql_command('GET-DATA', str(get_what).lower(), '')
+    temp_o = (((list(temp_output.values())[0])[0])[0]).lower()
+    print("here: ", temp_o)
+    output = functions.enact_mysql_command('GET-DATA', 'tables', temp_o)
     print("api_get_all_data: ", output)
     return jsonify(output)
 
+@app.route("/get-all-table")
+def api_get_table_names():
+    """
+    Simple api to get all data from database through functions.py
+    :return:
+    """
+    output = functions.enact_mysql_command('GET-DATA', 'all', '')
+    print("api_get_all_table names: ", output)
+    return jsonify(output)
+
+@app.route("/get-column/<string:get_what>")
+def api_get_column_data(get_what: str):
+    """
+    Simple api to get all data from database through functions.py
+    :return:
+    """
+    temp = []
+    temp = get_what.split('-')
+    output = functions.enact_mysql_command('GET-DATA', 'column', temp)
+    logging.debug("api_get_all_data: " + output)
+    return jsonify(output)
 
 if __name__ == '__main__':
     config = functions.get_config()
