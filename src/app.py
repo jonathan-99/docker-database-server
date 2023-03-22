@@ -44,7 +44,7 @@ def api_create_table(table_name) -> json:
 
     output = functions.enact_mysql_command('ADDTABLE', table_name, '')
     print("api_create_table: ", output)
-    return jsonify(output)
+    return output
 
 
 @app.route("/add_data/<string:table_name>/<string:input_data>")
@@ -70,11 +70,14 @@ def api_get_data(get_what: str):
     :return:
     """
     temp_output = functions.enact_mysql_command('GET-DATA', str(get_what).lower(), '')
-    temp_o = (((list(temp_output.values())[0])[0])[0]).lower()
-    print("here: ", temp_o)
-    output = functions.enact_mysql_command('GET-DATA', 'tables', temp_o)
-    print("api_get_all_data: ", output)
-    return jsonify(output)
+    if 'error' in str(temp_output).lower():
+        logging.debug('Getting data from all. ' + temp_output)
+        return temp_output
+    else:
+        temp_o = (((list(temp_output.values())[0])[0])[0]).lower()
+        output = functions.enact_mysql_command('GET-DATA', 'tables', temp_o)
+        logging.debug('Getting data from all. ' + output)
+    return output
 
 @app.route("/get-all-table")
 def api_get_table_names():
