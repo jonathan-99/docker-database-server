@@ -2,6 +2,7 @@
 
 try:
     import os
+    import datetime
     import sys
     import csv
     import json
@@ -50,7 +51,7 @@ def error_translation(code) -> json:
     elif code == errorcode.ER_BAD_DB_ERROR:
         second = "Database does not exist"
 
-    output = {first : second}
+    output = {first: second}
     logging.error("MySQL error." + str(output))
     return output
 
@@ -93,7 +94,14 @@ class DataBase:
         except mysql.connector.Error as err:
             output = error_translation(err.errno)
         logging.info("Sql done {}".format(sql))
-        return output
+        out = {'return':
+                   [
+                       output,
+                       {'sql': str(sql)},
+                       {'datetime': datetime.datetime.now()}
+                   ]
+        }
+        return out
 
     def check_duplicate(self, table: str, column: str, value: str) -> bool:
         # define what type this is checking
