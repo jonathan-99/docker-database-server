@@ -85,6 +85,7 @@ def enact_mysql_command(command: str, table_name: str, data: str) -> json:
         return {'Error with input being dodgy': 'something'}
 
 
+
 def get_func_names(filename):
     """
 
@@ -110,3 +111,33 @@ def get_directory_listing(input_directory='testing/') -> list:
                    '/create_table/table_name',
                    '/get-all-table]']
     return input_list
+
+  
+  
+def html_table(input_value) -> list:
+    """
+    This function takes values and places them in a html list
+    :param input_value:
+    :return list:
+    """
+    logging.debug("html_table")
+
+    output = ['<table>']
+    for sublist in input_value:
+        output.append('<tr><td>')
+        output.append('</td><td>'.join(sublist))
+        output.append('</td></tr>')
+    output.append('</table>')
+    return output
+
+def create_html_page_wrapper(name: str) -> tuple:
+    """
+    Need the start and end of a html page.
+    :return: str, str
+    """
+    logging.debug("create_html_page_wrapper with " + name)
+
+    title = "<!DOCTYPE html><head><title>" + name
+    title += "</title></head><body>"
+    end_tags = "</body></html>"
+    return title, end_tags
