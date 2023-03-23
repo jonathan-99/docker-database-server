@@ -6,6 +6,7 @@ The main functionality is referenced here.
 
 try:
     import datetime
+    import re
     import os
     import sys
     import time
@@ -84,6 +85,35 @@ def enact_mysql_command(command: str, table_name: str, data: str) -> json:
         return {'Error with input being dodgy': 'something'}
 
 
+
+def get_func_names(filename):
+    """
+
+    :param filename:
+    :return:
+    """
+    infile = open(filename)
+    data = infile.readlines()
+    result = []
+    for line in data:
+        matching = re.search(r'\s*def (\w+)', line)
+        if matching != None:
+            result.append(matching.group(1))
+    return result
+
+def get_directory_listing(input_directory='testing/') -> list:
+    names = get_func_names('src/app.py')
+    print("Function names: ", names)
+    input_list = ['/',
+                   '/get-column/tablename-columnname',
+                   '/get/all',
+                   '/add_data/table_name/input_data',
+                   '/create_table/table_name',
+                   '/get-all-table]']
+    return input_list
+
+  
+  
 def html_table(input_value) -> list:
     """
     This function takes values and places them in a html list
