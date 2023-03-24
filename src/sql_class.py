@@ -2,12 +2,12 @@
 
 try:
     import os
-    import datetime
     import sys
     import csv
     import json
     import logging
     import re
+    import datetime
     import mysql.connector
     from mysql.connector import errorcode
 except ImportError as e:
@@ -29,9 +29,12 @@ def error_translation(code) -> json:
         else:
             second = "Server error codes reserved for messages sent to clients."
     elif (code > 1999) and (code < 3000):
-        second = "Client error codes reserved for use by the client library."
+        if code == 2003:
+            second += ' 2003. Can not connect to server - is it on?'
+        else:
+            second = "2000-2999. Client error codes reserved for use by the client library."
     elif (code > 2999) and (code < 4000):
-        second = "Client error codes reserved for use by the client library."
+        second = "3000-3999. Client error codes reserved for use by the client library."
     elif (code > 3999) and (code < 5000):
         second = "Server error codes reserved for messages sent to clients."
     elif (code > 4999) and (code < 6000):
@@ -51,6 +54,7 @@ def error_translation(code) -> json:
     elif code == errorcode.ER_BAD_DB_ERROR:
         second = "Database does not exist"
 
+    second = str(code) + ". " + second
     output = {first: second}
     logging.error("MySQL error." + str(output))
     return output
@@ -81,26 +85,29 @@ class DataBase:
             print(">> Connection status: ", mycursor)
             print(">> mycursor: ", mycursor.description)
 
-            # check the table exists first
-
             mycursor.execute(sql)
+            print(">> Connection status: ", mycursor)
+            print(">> mycursor: ", mycursor.description)
+
             output = mycursor.fetchall()
-            # out3 = mycursor.description
 
             cnx.commit()
             mycursor.close()
             cnx.close()
-            return output
         except mysql.connector.Error as err:
             output = error_translation(err.errno)
         logging.info("Sql done {}".format(sql))
-        out = {'return':
-                   [
-                       output,
-                       {'sql': str(sql)},
-                       {'datetime': datetime.datetime.now()}
-                   ]
-        }
+        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+        print("SLQ CLASS: ", output)
+        output_json = json.dumps(output)
+        out = {'send_sql() return':
+                   {
+                        'sql output': output_json,
+                        'sql': sql,
+                        'datetime': now
+                    }
+               }
+        print("send_sql output: ", out)
         return out
 
     def check_duplicate(self, table: str, column: str, value: str) -> bool:
@@ -127,12 +134,16 @@ class DataBase:
             print("add_data(): ", table_name)
             sql = "CREATE TABLE {} ({});".format(table_name, 'test_column VARCHAR(20)')
         elif add_type == 'ADDDATA':
-            sql = "INSERT TABLE {} ({})".format(table_name, key)
+            sql = "ALTER TABLE {}".format(table_name)
+            for k in key:
+                sql += " ADD COLUMN {} VARCHAR(20)".format(k)
+            sql += ";"
+            print("ADDDATA, sql statement: ", sql)
         else:
             pass
         output = self.send_sql(sql)
-        print('Possible error:', output)
-        return output
+        print('add_data: ', output, type(output))
+        return {'return': str(output)}
 
     def get_data(self, type_of_request: str, data) -> json:
         """
@@ -142,17 +153,19 @@ class DataBase:
         :return:
         """
         if type_of_request == 'tables':
-            sql = 'SELECT * from {};'.format(str(data))
+            #  SELECT {} FROM sys.tables
+            sql = 'SELECT {} FROM sys.tables;'.format(str(data))
         elif type_of_request == 'column':
-            sql = 'SELECT {} from {};'.format(data[0], data[1])
+            sql = "DESCRIBE `{}`;".format(data.upper()) #  SHOW COLUMNS FROM
         elif type_of_request == 'SPECIFIC':
             sql = 'SHOW TABLE {}'.format(data)
         elif type_of_request == 'all':
             sql = 'Show tables;'
         else:
             sql = 'Show tables;'
-        print('sql statement: ', sql)
+        print('get_data(): sql statement: ', sql)
         output = self.send_sql(sql)
+        print("output from get_data(): ", output)
         return output
 
     def get_statistics(self) -> json:
@@ -176,5 +189,5 @@ class DataBase:
         sql_statement_table = 'SHOW TABLES'
         column_headers = 'select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='
         output = sql_statement_all
-        print("Probable errors: ", output)
+        print("Get_all_data(): ", output)
         return output

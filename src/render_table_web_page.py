@@ -22,7 +22,7 @@ def html_table(input_value) -> list:
     output = ['<table>']
     for sublist in input_value:
         output.append('<tr><td>')
-        output.append('</td><td>'.join(sublist))
+        output.append('{}</td><td>'.format(sublist))
         output.append('</td></tr>')
     output.append('</table>')
     return output
@@ -55,9 +55,23 @@ def generate_html_page(name_of_page: str) -> None:
 
     table.insert(0, title)
     table.append(end_tags)
+
+    filename = 'templates/{}.html'.format(name_of_page+'.html')
+    characters_to_remove = [',', "'", "[", "]"]
+    new_table = str(table)
+
+    for x in range(0, len(characters_to_remove)):
+        new_table = new_table.replace(characters_to_remove[x], "")
+
+    if os.path.exists(filename):
+        reply = "file {} exists, deleting it.".format(name_of_page)
+        print(reply)
+        os.remove(filename)
+    else:
+        pass
     try:
         with open('templates/' + name_of_page + ".html", "w") as fileObject:
-            fileObject.write(str(table))
+            fileObject.write(new_table)
     except FileExistsError as e:
         print("<html><body><h1>" + "File Error" + "</h1></body></html>")
         logging.error("File Exists Error in generate_html_page()", exc_info=True)
