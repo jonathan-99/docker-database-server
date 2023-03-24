@@ -15,6 +15,7 @@ try:
     from src.class_file import ConfigData
     from src.sql_class import DataBase
     from src.injection_class import InjectorCheck
+    import src.app as app
     from flask import jsonify
 except Exception as e:
     print("importing error: ", e)
@@ -53,7 +54,7 @@ def get_config(default_location='config.json') -> ConfigData:
     return config_data_object
 
 
-def enact_mysql_command(command: str, table_name: str, data: str) -> json:
+def enact_mysql_command(command: str, table_name: str, data) -> json:
     """
     A generic function which calls the mysql class and returns all data in json format.
     :param command:
@@ -77,6 +78,9 @@ def enact_mysql_command(command: str, table_name: str, data: str) -> json:
         elif command == 'GET-DATA':
             a = DataBase()
             output = a.get_data(table_name, data)
+        elif command == 'GET-COLUMN':
+            a = DataBase()
+            output = a.get_data('column', table_name)
         else:
             output = {'temp': 'these needs doing'}
         logging.debug("enact_mysql_command() " + str(output))
@@ -85,6 +89,22 @@ def enact_mysql_command(command: str, table_name: str, data: str) -> json:
         return {'Error with input being dodgy': 'something'}
 
 
+
+def get_urls(filename: str) -> list:
+    """
+
+    :param filename:
+    :return:
+    """
+    infile = open(filename)
+    data = infile.readlines()
+    result = []
+    for line in data:
+        matching = re.search(r'(@app\.route\(\")((/[a-z]*[-/][a-z]*))', line)
+        if matching != None:
+            result.append(matching.group(2))
+    infile.close()
+    return result
 
 def get_func_names(filename):
     """
@@ -99,18 +119,19 @@ def get_func_names(filename):
         matching = re.search(r'\s*def (\w+)', line)
         if matching != None:
             result.append(matching.group(1))
+    infile.close()
     return result
 
 def get_directory_listing(input_directory='testing/') -> list:
     names = get_func_names('src/app.py')
-    print("Function names: ", names)
+    urls = get_urls('src/app.py')
     input_list = ['/',
                    '/get-column/tablename-columnname',
                    '/get/all',
                    '/add_data/table_name/input_data',
                    '/create_table/table_name',
                    '/get-all-table]']
-    return input_list
+    return urls
 
   
   
