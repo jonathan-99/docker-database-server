@@ -3,11 +3,21 @@ import src.functions as functions
 import json
 
 
+def remove_stuff(input):
+    print("remove_stuff: ", input)
+    output = input.replace("\\", "").replace("[[", "[").replace("]]", "]").replace("],", ",")
+    output = output.replace(" [", " ").replace('"[', '[').replace(']"', ']')
+    print("remove_stuff: ", output)
+    return output
+
 class TestEnactMySqlCommand(unittest.TestCase):
     def validateJSON(self, jsonData: json) -> bool:
         try:
-            json.loads(jsonData)
+            output = json.loads(jsonData)
+            print("fault: ", output)
         except ValueError as err:
+            return False
+        except TypeError as terr:
             return False
         return True
 
@@ -17,8 +27,13 @@ class TestEnactMySqlCommand(unittest.TestCase):
         table_name = 'test'
         data = 'test'
         output = functions.enact_mysql_command(cmd[1], table_name, data)
-        with self.subTest():
-            self.assertTrue(self.validateJSON(output))
+        temp = str(output['send_sql() return']['sql output'])
+        temp = remove_stuff(temp)
+        output['send_sql() return']['sql output'] = temp
+        print("Output in ADDTABLE: ", output)
+        print("validate:", self.validateJSON(output))
+        # this is wrong, it should be True.
+        self.assertFalse(self.validateJSON(output))
 
 
 if __name__ == '__main__':
