@@ -14,7 +14,11 @@ try:
     import flask
     from flask import Flask, jsonify
     from flask import render_template
-    import functions, config, incoming_data_class, injection_class, sql_class
+    import src.functions as functions
+    import src.config as config
+    import src.incoming_data_class
+    import src.injection_class
+    import src.sql_class
     import json
     import jinja2
     import os
@@ -35,7 +39,7 @@ def index():
 
 
 @app.route("/create-table/<string:table_name>")
-def api_create_table(table_name) -> json:
+def api_create_table(table_name: str): # -> json:
     """
     Simple api to get all data from database through functions.py
     :return:
@@ -44,11 +48,11 @@ def api_create_table(table_name) -> json:
 
     output = functions.enact_mysql_command('ADDTABLE', table_name, '')
     print("api_create_table: ", output)
-    return jsonify(output)
+    return output
 
 
 @app.route("/add-data/<string:table_name>/<string:input_data>")
-def api_add_data(table_name: str, input_data: str) -> json:
+def api_add_data(table_name: str, input_data: str): # -> json:
     """
     This takes data from any source, containing any data, and adds it to a known table.
     requires input_data to be in the following format.
@@ -61,7 +65,7 @@ def api_add_data(table_name: str, input_data: str) -> json:
     :return (json) output_data:
     """
     logging.debug("api_add_data: " + table_name + " : " + input_data)
-
+    new_list = []
     if table_name.lower() == 'weather':
         new_list = input_data.split(',')
     elif table_name.lower() == 'test1':
@@ -96,7 +100,7 @@ def api_get_data(get_what: str):
     return multi_output
 
 @app.route("/get-all-table")
-def api_get_table_names() -> json:
+def api_get_table_names(): # -> json:
     """
     Simple api to get all data from database through functions.py
     :return:

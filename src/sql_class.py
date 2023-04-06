@@ -96,6 +96,8 @@ class DataBase:
             cnx.close()
         except mysql.connector.Error as err:
             output = error_translation(err.errno)
+        except mysql.connector as err1:
+            print("new error trap: ", err1)
         logging.info("Sql done {}".format(sql))
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
         print("SLQ CLASS: ", output)
