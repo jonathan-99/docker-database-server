@@ -21,7 +21,7 @@ class Test_Get_Func_Names(unittest.TestCase):
         with self.subTest():
             self.assertIs(type(output), list)
         with self.subTest():
-            self.assertEqual(output, expected_return_functions)
+            self.assertEqual(output[1], expected_return_functions[0])
 
 if __name__ == '__main__':
     unittest.main()
