@@ -22,19 +22,27 @@ try:
     import json
     import jinja2
     import os
+    import requests
 except Exception as e:
     print("importing error: ", e)
 
 app = flask.Flask(__name__, template_folder='../templates')
 # os.system('sudo /etc/init.d/mysql start')
 
+def create_app():
+    app.run(debug=True, host='127.0.0.1', port=7000)
 
-@app.route('/')
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
     """
     Default index page which will show database stats: size, last entry.
     :return:
     """
+    if requests.method == 'POST':
+        print("post")
+    else:
+        print("get")
     return render_template("index.html")
 
 
@@ -125,4 +133,4 @@ if __name__ == '__main__':
     total_path = config.get_logging_path() + config.get_log_filename()
     logging.basicConfig(filename=total_path, level=config.get_logging_level())
 
-    app.run(debug=True, host='127.0.0.1', port=7000)
+    create_app()
