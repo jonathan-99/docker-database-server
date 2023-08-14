@@ -5,7 +5,7 @@ import os
 
 class TestGetConfig(unittest.TestCase):
     def test_get_config(self):
-        os.chdir("C:/Users/local_admin/PycharmProjects/docker-database-server/")
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
         output = functions.get_config('src/config.json')
         with self.subTest():
             self.assertEqual(output.get_logging_path(), 'logging/')

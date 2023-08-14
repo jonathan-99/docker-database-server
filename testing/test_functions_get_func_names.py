@@ -4,7 +4,8 @@ import os
 
 class Test_Get_Func_Names(unittest.TestCase):
     def test_get_func_names(self):
-        os.chdir("C:\\Users\\local_admin\\PycharmProjects\\docker-database-server\\")
+        # os.chdir("C:\\Users\\local_admin\\PycharmProjects\\docker-database-server\\")
+        os.chdir("C:\\Users\\JonathanL\\PycharmProjects\\docker-database-server\\")
         output = functions.get_func_names('src/app.py')
         expected_return_functions = ['index',
                                      'api_create_table',

@@ -5,5 +5,7 @@
   "src": "src",
   "data": "data/",
   "simple-server-port": 7000,
-  "logging-level": "logging.DEBUG"
+  "logging-level": "logging.DEBUG",
+  "database_name": "dababase_name.db",
+  "test-sql-database": "test-db.db"
 }

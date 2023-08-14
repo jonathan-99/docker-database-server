@@ -4,7 +4,8 @@ try:
     import csv
     import json
     import logging
-    import mysql.connector
+    import sqlite3
+    # import mysql.connector
 
 except ImportError as e:
     sys.exit("Importing error: " + str(e))
@@ -22,6 +23,10 @@ class ConfigData:
         self.data_location = ""
         self.server_port = ""
         self.logging_level = ""
+        self.database_name = ""
+
+    def set_database_name(self, db_name='testing/database_name.db') -> None:
+        self.database_name = db_name
 
     def set_path(self, path_location="/opt/docker-database-server/") -> None:
         self.path = path_location
@@ -40,6 +45,9 @@ class ConfigData:
 
     def set_logging_level(self, log_level="logging.DEBUG") -> None:
         self.logging_level = log_level
+
+    def get_database_name(self) -> str:
+        return self.database_name
 
     def get_path(self) -> str:
         return self.path
@@ -65,5 +73,6 @@ class ConfigData:
             + str(self.log_filename) \
             + str(self.data_location) \
             + str(self.server_port) \
-            + str(self.logging_level)
+            + str(self.logging_level) \
+            + str(self.database_name)
         return output_string

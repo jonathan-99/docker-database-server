@@ -15,14 +15,12 @@ try:
     from flask import Flask, jsonify
     from flask import render_template
     import src.functions as functions
-    import src.config as config
     import src.incoming_data_class
     import src.injection_class
     import src.sql_class
     import json
     import jinja2
     import os
-    import requests
 except Exception as e:
     print("importing error: ", e)
 

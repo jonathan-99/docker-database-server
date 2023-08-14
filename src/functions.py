@@ -21,25 +21,24 @@ except Exception as e:
     print("importing error: ", e)
 
 
-def get_config(default_location='config.json') -> ConfigData:
+def get_config(input_file_name: str) -> ConfigData:
     """
     Get the config from a json file and return an object class of that data.
     """
     type_of_file = "json"
 
     config_data_object = ConfigData()
-    print("Path debug default ", default_location)
     if type_of_file == "json":
         try:
-            f = open(default_location)
-            data = json.load(f)
-            f.close()
-            config_data_object.set_path(data["path"])
-            config_data_object.set_logging_path(data["logging_path"])
-            config_data_object.set_log_filename(data["log_filename"])
-            config_data_object.set_data_location(data["data"])
-            config_data_object.set_server_port(data["simple-server-port"])
-            config_data_object.set_logging_level(["logging-level"])
+            with open(input_file_name, 'r') as fileObject:
+                data = json.load(fileObject)
+                config_data_object.set_path(data["path"])
+                config_data_object.set_logging_path(data["logging_path"])
+                config_data_object.set_log_filename(data["log_filename"])
+                config_data_object.set_data_location(data["data"])
+                config_data_object.set_server_port(data["simple-server-port"])
+                config_data_object.set_logging_level(["logging-level"])
+                config_data_object.set_database_name()
         except FileExistsError or FileExistsError as err:
             logging.error("Getting config error: " + str(err))
     else:
@@ -50,14 +49,16 @@ def get_config(default_location='config.json') -> ConfigData:
         config_data_object.set_data_location()
         config_data_object.set_server_port()
         config_data_object.set_logging_level()
+        config_data_object.set_database_name()
     logging.debug("We found these configs: " + str(config_data_object.show_all()))
     return config_data_object
 
 
-def enact_mysql_command(command: str, table_name: str, data) -> json:
+def enact_mysql_command(database: str, command: str, table_name: str, data) -> json:
     """
     A generic function which calls the mysql class and returns all data in json format.
     :param command:
+    table_name:
     :param data:
     :return: json
     """
@@ -71,23 +72,22 @@ def enact_mysql_command(command: str, table_name: str, data) -> json:
     if check:
         if command == 'ADDTABLE':
             a = DataBase()
-            output = a.add_data('ADDTABLE', table_name, '')
+            output = a.add_data(database, 'ADDTABLE', table_name, '')
         elif command == 'ADDDATA':
             a = DataBase()
-            output = a.add_data('ADDDATA', table_name, data)
+            output = a.add_data(database, 'ADDDATA', table_name, data)
         elif command == 'GET-DATA':
             a = DataBase()
-            output = a.get_data(table_name, data)
+            output = a.get_data(database, table_name, data)
         elif command == 'GET-COLUMN':
             a = DataBase()
-            output = a.get_data('column', table_name)
+            output = a.get_data(database, 'column', table_name)
         else:
             output = {'temp': 'these needs doing'}
         logging.debug("enact_mysql_command() " + str(output))
         return output
     else:
         return {'Error with input being dodgy': 'something'}
-
 
 
 def get_urls(filename: str) -> list:
@@ -101,10 +101,11 @@ def get_urls(filename: str) -> list:
     result = []
     for line in data:
         matching = re.search(r'(@app\.route\(\")((/[a-z]*[-/][a-z]*))', line)
-        if matching != None:
+        if matching is not None:
             result.append(matching.group(2))
     infile.close()
     return result
+
 
 def get_func_names(filename):
     """
@@ -117,24 +118,24 @@ def get_func_names(filename):
     result = []
     for line in data:
         matching = re.search(r'\s*def (\w+)', line)
-        if matching != None:
+        if matching is not None:
             result.append(matching.group(1))
     infile.close()
     return result
+
 
 def get_directory_listing(input_directory='testing/') -> list:
     names = get_func_names('src/app.py')
     urls = get_urls('src/app.py')
     input_list = ['/',
-                   '/get-column/tablename-columnname',
-                   '/get/all',
-                   '/add_data/table_name/input_data',
-                   '/create_table/table_name',
-                   '/get-all-table]']
+                  '/get-column/tablename-columnname',
+                  '/get/all',
+                  '/add_data/table_name/input_data',
+                  '/create_table/table_name',
+                  '/get-all-table]']
     return urls
 
-  
-  
+
 def html_table(input_value) -> list:
     """
     This function takes values and places them in a html list
@@ -150,6 +151,7 @@ def html_table(input_value) -> list:
         output.append('</td></tr>')
     output.append('</table>')
     return output
+
 
 def create_html_page_wrapper(name: str) -> tuple:
     """
