@@ -1,6 +1,6 @@
 import unittest
 import os
-import sql_class
+import src.sql_class as sql_class
 
 class TestDataBase(unittest.TestCase):
     def test_db_exists(self):

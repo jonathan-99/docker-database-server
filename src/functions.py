@@ -68,19 +68,16 @@ def enact_mysql_command(database: str, command: str, table_name: str, data) -> j
     # injectorObject.add(str(data))
     # check = injectorObject.check_against_comment()
     check = True
+    a = DataBase()
 
-    if check:
+    if check and (a.check_database_exists(a.database_name)):
         if command == 'ADDTABLE':
-            a = DataBase()
-            output = a.add_data(database, 'ADDTABLE', table_name, '')
+            output = a.add_table(table_name)
         elif command == 'ADDDATA':
-            a = DataBase()
-            output = a.add_data(database, 'ADDDATA', table_name, data)
+            output = (a.add_data_to_table(table_name, data))
         elif command == 'GET-DATA':
-            a = DataBase()
-            output = a.get_data(database, table_name, data)
+            output = (a.get_data_from_table(table_name, data))
         elif command == 'GET-COLUMN':
-            a = DataBase()
             output = a.get_data(database, 'column', table_name)
         else:
             output = {'temp': 'these needs doing'}
