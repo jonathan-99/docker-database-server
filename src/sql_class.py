@@ -8,6 +8,7 @@ try:
     import logging
     import re
     import datetime
+    import src.functions
     import sqlite3 as database
     import src.mysql_error_translation
     # import mysql.connector
@@ -16,7 +17,7 @@ except ImportError as e:
     sys.exit("Importing error: " + str(e))
 
 
-def error_translation(code) -> json:
+def error_translation(code: int) -> json:
     print("error_translation({}): type: {}".format(code, type(code)))
     first = "error in sqlite3"
     if (code >= 0) & (code < 100):
@@ -35,114 +36,147 @@ class DataBase:
     def __init__(self):
         logging.debug('Initiating a database object')
         """
-        sql = 'CREATE DATABASE mydatabase'
-        self.send_sql(sql)
+        This function creates the Database object which is used to control the engagement with the sqlite3 database.
         """
-        #self.database_name = config_file["database_name"]
+        #  -- get config data here. --
+        self._add_database_name()
+        self.table_name = []
+        inst = self._mysql_database_connection_details__()
+        self.connection_details = inst
 
-
-    def __mysql_database_connection_details__(self):
-        self.user = 'user',
-        self.password = 'password',
-        self.host = '127.0.0.1',
-        self.port = 3306,
-        #self.database_name = config_file["database_name"]
-
+    def _add_database_name(self) -> None:
+        """
+        This function will look through the config data to pull the database name
+        """
+        with open('src/config.json', 'r') as r:
+            temp = json.load(r)
+            output = temp["database_name"]
+        print("..in _add_database_name(): {}".format(output))
+        self.database_name = output
 
     @staticmethod
-    def send_sql(database_name: str, sql: str):
-        print(">> send_sql({})".format(sql))
+    def _check_sql_statement(inp: str) -> bool:
+        if database.complete_statement(inp):
+            return True
+        else:
+            return False
+
+    def _mysql_database_connection_details__(self):
+        """
+        This function holds the basic details of a connection within the object.
+        """
+        self.user = 'user'
+        self.password = 'password'
+        self.host = '127.0.0.1'
+        self.port = 3306
+
+    @staticmethod
+    def check_database_exists(database_name: str) -> bool:
+        """
+        This checks to see if the database file exists only.
+        """
+        return os.path.isfile(database_name)
+
+    def check_table_exists(self, table_name: str) -> bool:
+        """
+        This function checks if a table exists only. Pre-req - the database must be checked first.
+        """
+        sql = "SELECT * FROM sqlite_master WHERE type='table' ORDER BY name;"
+        output = self._send_sql(self.database_name, sql)
+        if table_name in output['send_sql() return']['sql output']:
+            return True
+        else:
+            return False
+
+    def add_table(self, table_name: str) -> bool:
+        """
+        Prerequisite, check if database exists, then this will add a specific table.
+        """
+        sql = "CREATE TABLE {} ({});".format(table_name, 'test_column VARCHAR(20)')
+        output = self._send_sql(self.database_name, sql)
+        if '' in output['send_sql() return': 'sql output']:
+            return True
+        else:
+            internal_error = "sql_class.add_table() error - {}".format(output)
+            logging.debug(internal_error)
+            print(internal_error)
+            return False
+
+    @staticmethod
+    def add_data_to_table(table_name: str, inp: list) -> bool:
+        """
+        This function will add data to a table. Assume columns exists
+        """
+        string_value = ""
+        for i in inp:
+            string_value += str(i)
+        sql = "INSERT TABLE {} VALUES {}".format(table_name, string_value)
+        for i in inp:
+            sql += " ADD COLUMN {} VARCHAR(20)".format(i)
+        sql += ";"
+        return True
+
+    def get_data_from_table(self, table_name: str, data: list) -> json:
+        """
+        This function returns the data from a table by each column.
+        {"table name": "<name>",
+            {"column 1 title": [data1, data2], "column 2 title": [data3, data4]}}
+        """
+        sql_statement = "SELECT * FROM table {} WHERE type='table'".format(table_name)
+        output = self._send_sql(self.database_name, sql_statement)
+        print("Need to refine the return into json format")
+        print("get_data_from_table -- {}".format(output))
+        return output
+
+    def get_table_details(self, input_value: str) -> json:
+        """
+        This function returns column headings.
+        """
+        sql_statement = "SELECT * FROM {} WHERE type='table';".format(input_value)
+        output = self._send_sql(self.database_name, sql_statement)
+        return output
+
+    def get_all(self) -> json:
+        """
+        This function will return everything
+        """
+        sql = 'SHOW tables;'
+        output = self._send_sql(self.database_name, sql)
+        return output
+
+    @staticmethod
+    def _send_sql(database_name: str, sql: str):
+        print(">> send_sql()")
         logging.debug(">> in send_sql..." + str(type(sql)) + sql)
         try:
             connection = database.connect(database_name)
             # print("** connection {} ".format(connection.total_changes))
-            mycursor = connection.cursor()
-            temp_output = mycursor.execute(sql).fetchall()
-            print(">> temp_output ", temp_output)
+            MyCursor = connection.cursor()
+            temp_output = MyCursor.execute(sql).fetchone()
+            print(">> mycursor.execute output ", temp_output)
 
-            output = mycursor.fetchall()
+            output = MyCursor.fetchall()
 
             connection.commit()
-            mycursor.close()
+            MyCursor.close()
             connection.close()
         # www.sqlite.org/rescode.html#extrc
         except ConnectionError as err:
-            output = error_translation(err)
+            output = error_translation(err.errno)
         logging.info("send_sql(): Sql done {}".format(sql))
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
         print("send_sql(): SLQ CLASS: ", output)
         output_json = json.dumps(output)
-        out = {'send_sql() return':
-                   {
-                        'sql output': output_json,
-                        'sql': sql,
-                        'datetime': now
-                    }
-               }
+        out = {'send_sql() return': {'sql output': output_json, 'sql': sql, 'datetime': now}}
         print("send_sql output: ", out)
         return out
 
-    def check_duplicate(self, table: str, column: str, value: str) -> bool:
+    @staticmethod
+    def check_duplicate(table: str, column: str, value: str) -> bool:
         # define what type this is checking
         # sql statement to check if it exists
         # return is: if check in sql return -> return True
         return True
-
-    def check_exists(self, database: str, name_to_check: str):
-        print("check_exist({})".format(name_to_check))
-        sql = '`SELECT * FROM INFORMATION_SCHEMA.TABLES` WHERE table_name = {}'.format(name_to_check)
-        output = self.send_sql(database, sql)
-        print(" -- check {} exists within {}".format(name_to_check, output))
-        if name_to_check in output:
-            print(" -- {} already exists:".format(name_to_check))
-            return True
-        else:
-            print(" -- {} is new".format(name_to_check))
-            return False
-
-    def add_data(self, database: str,  add_type: str, table_name: str, key: list) -> json:
-        print("add_data({}, {}, {}, {})".format(database, add_type, table_name, key))
-        sql = ""
-
-        if (add_type == 'ADDTABLE') & (not self.check_exists(database, table_name)):
-            print("add_data(): ", table_name)
-            sql = "CREATE TABLE {} ({});".format(table_name, 'test_column VARCHAR(20)')
-        elif add_type == 'ADDDATA':
-            sql = "ALTER TABLE {}".format(table_name)
-            for k in key:
-                sql += " ADD COLUMN {} VARCHAR(20)".format(k)
-            sql += ";"
-            print("ADDDATA, sql statement: ", sql)
-        else:
-            pass
-        output = self.send_sql(database, sql)
-        print('add_data: ', output, type(output))
-        return {'return': str(output)}
-
-    def get_data(self, database: str, type_of_request: str, data) -> json:
-        """
-        Types of request are: Table names, column names, everything, values from specific column.
-        :param type_of_request: TABLES
-        :param data:
-        :return:
-        """
-        print("get_all(self, {}, {}):".format(type_of_request, data))
-        if type_of_request == 'tables':
-            #  SELECT {} FROM sys.tables
-            sql = 'SELECT {} FROM sys.tables;'.format(str(data))
-        elif type_of_request == 'column':
-            sql = "DESCRIBE `{}`;".format(data.upper()) #  SHOW COLUMNS FROM
-        elif type_of_request == 'SPECIFIC':
-            sql = 'SHOW TABLE {}'.format(data)
-        elif type_of_request == 'GET-ALL':
-            sql = 'SHOW tables;'
-            print("within get_data(): elif GET-ALL")
-        else:
-            sql = 'SHOW tables;'
-        print('get_data(): sql statement: ', sql)
-        output = self.send_sql(database, sql)
-        print("output from get_data(): ", output)
-        return output
 
     def get_statistics(self) -> json:
         # .rowcount
@@ -150,20 +184,3 @@ class DataBase:
         # .description
         # size
         return {'database size': '10', 'table names': 'one, two, three'}
-
-    @staticmethod
-    def get_all_data() -> str:
-        """
-        This will return a json of summary data of all tables.
-        + Table names.
-        + Columns.
-        + Number of data points.
-        :return: json
-        """
-        logging.debug("Get all data function")
-        sql_statement_all = 'SELECT *'
-        sql_statement_table = 'SHOW TABLES'
-        column_headers = 'select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='
-        output = sql_statement_all
-        print("Get_all_data(): ", output)
-        return output
