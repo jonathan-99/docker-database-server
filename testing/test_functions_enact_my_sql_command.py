@@ -5,11 +5,11 @@ import os
 from random import randrange
 
 
-def remove_stuff(input):
-    print("remove_stuff: ", input)
-    output = input.replace("\\", "").replace("[[", "[").replace("]]", "]").replace("],", ",")
+def remove_stuff(inp):
+    print("remove_stuff: ", inp)
+    output = inp.replace("\\", "").replace("[[", "[").replace("]]", "]").replace("],", ",")
     output = output.replace(" [", " ").replace('"[', '[').replace(']"', ']')
-    print("remove_stuff: ", output)
+    print("remove_stuff(): {}".format(output))
     return output
 
 
@@ -31,7 +31,7 @@ class TestEnactMySqlCommand(unittest.TestCase):
         table_name = 'test_table'
         test_data = ['test_data_1', 'test_data_2']
         configuration = functions.get_config('src/config.json')
-        database_name = configuration.get_database_name()
+        database_name = str(configuration.set_database_name('testing/database_name.db'))
         print("Testing pre-sets: {}, {}, {}, {}".format(cmd, table_name, test_data, database_name))
 
 
