@@ -21,38 +21,6 @@ except Exception as e:
     print("importing error: ", e)
 
 
-def get_config(input_file_name: str) -> ConfigData:
-    """
-    Get the config from a json file and return an object class of that data.
-    """
-    type_of_file = "json"
-
-    config_data_object = ConfigData()
-    if type_of_file == "json":
-        try:
-            with open(input_file_name, 'r') as fileObject:
-                data = json.load(fileObject)
-                config_data_object.set_path(data["path"])
-                config_data_object.set_logging_path(data["logging_path"])
-                config_data_object.set_log_filename(data["log_filename"])
-                config_data_object.set_data_location(data["data"])
-                config_data_object.set_server_port(data["simple-server-port"])
-                config_data_object.set_logging_level(["logging-level"])
-                config_data_object.set_database_name()
-        except FileExistsError or FileExistsError as err:
-            logging.error("Getting config error: " + str(err))
-    else:
-        print("was expecting json as a config file")
-        config_data_object.set_path()
-        config_data_object.set_logging_path()
-        config_data_object.set_log_filename()
-        config_data_object.set_data_location()
-        config_data_object.set_server_port()
-        config_data_object.set_logging_level()
-        config_data_object.set_database_name()
-    logging.debug("We found these configs: " + str(config_data_object.show_all()))
-    return config_data_object
-
 
 def enact_mysql_command(database: str, command: str, table_name: str, data) -> json:
     """
@@ -68,7 +36,11 @@ def enact_mysql_command(database: str, command: str, table_name: str, data) -> j
     # injectorObject.add(str(data))
     # check = injectorObject.check_against_comment()
     check = True
-    a = DataBase()
+
+    c = get_config('src/config.json')
+    c.set_database_name('src/database_name.db')
+    a = DataBase(c.get_database_name())
+
 
     if check and (a.check_database_exists(a.database_name)):
         if command == 'ADDTABLE':

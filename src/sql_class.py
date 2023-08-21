@@ -8,7 +8,7 @@ try:
     import logging
     import re
     import datetime
-    import src.functions
+    import src.class_file as config_file
     import sqlite3 as database
     import src.mysql_error_translation
     # import mysql.connector
@@ -33,26 +33,20 @@ def error_translation(code: int) -> json:
 
 class DataBase:
 
-    def __init__(self):
+    def __init__(self, type_use: str) -> None:
         logging.debug('Initiating a database object')
         """
         This function creates the Database object which is used to control the engagement with the sqlite3 database.
         """
         #  -- get config data here. --
-        self._add_database_name()
-        self.table_name = []
-        inst = self._mysql_database_connection_details__()
-        self.connection_details = inst
+        c = config_file.ConfigData()
+        if type_use == 'main':
+            self.__database_name = c.get_database_name()
+        else:
+            self.__database_name = c.get_testing_database_name()
 
-    def _add_database_name(self) -> None:
-        """
-        This function will look through the config data to pull the database name
-        """
-        with open('src/config.json', 'r') as r:
-            temp = json.load(r)
-            output = temp["database_name"]
-        print("..in _add_database_name(): {}".format(output))
-        self.database_name = output
+        self.__table_name = []
+        self.connection_details = self._mysql_database_connection_details__()
 
     @staticmethod
     def _check_sql_statement(inp: str) -> bool:
@@ -61,14 +55,15 @@ class DataBase:
         else:
             return False
 
-    def _mysql_database_connection_details__(self):
+    def _mysql_database_connection_details__(self) -> object:
         """
         This function holds the basic details of a connection within the object.
         """
-        self.user = 'user'
-        self.password = 'password'
-        self.host = '127.0.0.1'
-        self.port = 3306
+        self.__user = 'user'
+        self.__password = 'password'
+        self.__host = '127.0.0.1'
+        self.__port = 3306
+        return self
 
     @staticmethod
     def check_database_exists(database_name: str) -> bool:
@@ -82,7 +77,7 @@ class DataBase:
         This function checks if a table exists only. Pre-req - the database must be checked first.
         """
         sql = "SELECT * FROM sqlite_master WHERE type='table' ORDER BY name;"
-        output = self._send_sql(self.database_name, sql)
+        output = self._send_sql(self.__database_name, sql)
         if table_name in output['send_sql() return']['sql output']:
             return True
         else:
@@ -93,7 +88,7 @@ class DataBase:
         Prerequisite, check if database exists, then this will add a specific table.
         """
         sql = "CREATE TABLE {} ({});".format(table_name, 'test_column VARCHAR(20)')
-        output = self._send_sql(self.database_name, sql)
+        output = self._send_sql(self.__database_name, sql)
         if '' in output['send_sql() return': 'sql output']:
             return True
         else:
@@ -122,8 +117,15 @@ class DataBase:
         {"table name": "<name>",
             {"column 1 title": [data1, data2], "column 2 title": [data3, data4]}}
         """
-        sql_statement = "SELECT * FROM table {} WHERE type='table'".format(table_name)
-        output = self._send_sql(self.database_name, sql_statement)
+        if not data:
+            sql_select_where = "*"
+        elif len(data) == 0:
+            sql_select_where = str(data[0])
+        else:
+            sql_select_where = "*"  # this is for multiple columns
+        
+        sql = "SELECT {} FROM table {} WHERE type='table'".format(sql_select_where, table_name)
+        output = self._send_sql(self.__database_name, sql)
         print("Need to refine the return into json format")
         print("get_data_from_table -- {}".format(output))
         return output
@@ -132,8 +134,8 @@ class DataBase:
         """
         This function returns column headings.
         """
-        sql_statement = "SELECT * FROM {} WHERE type='table';".format(input_value)
-        output = self._send_sql(self.database_name, sql_statement)
+        sql = "SELECT * FROM {} WHERE type='table';".format(input_value)
+        output = self._send_sql(self.__database_name, sql)
         return output
 
     def get_all(self) -> json:
@@ -141,7 +143,16 @@ class DataBase:
         This function will return everything
         """
         sql = 'SHOW tables;'
-        output = self._send_sql(self.database_name, sql)
+        output = self._send_sql(self.__database_name, sql)
+        return output
+
+    def get_statistics(self) -> json:
+        # .rowcount
+        # .column_names
+        # .description
+        # size
+        sql = "SELECT count() FROM PRAGMA_TABLE_INFO({});".format(self.__database_name)
+        output = self._send_sql(self.__database_name, sql)
         return output
 
     @staticmethod
@@ -151,36 +162,22 @@ class DataBase:
         try:
             connection = database.connect(database_name)
             # print("** connection {} ".format(connection.total_changes))
-            MyCursor = connection.cursor()
-            temp_output = MyCursor.execute(sql).fetchone()
+            mycursor = connection.cursor()
+            temp_output = mycursor.execute(sql).fetchone()
             print(">> mycursor.execute output ", temp_output)
 
-            output = MyCursor.fetchall()
+            output = mycursor.fetchall()
 
             connection.commit()
-            MyCursor.close()
+            mycursor.close()
             connection.close()
         # www.sqlite.org/rescode.html#extrc
         except ConnectionError as err:
             output = error_translation(err.errno)
         logging.info("send_sql(): Sql done {}".format(sql))
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
-        print("send_sql(): SLQ CLASS: ", output)
+        print(">> send_sql(): SLQ CLASS: ", output)
         output_json = json.dumps(output)
         out = {'send_sql() return': {'sql output': output_json, 'sql': sql, 'datetime': now}}
-        print("send_sql output: ", out)
+        print(">> send_sql output: ", out)
         return out
-
-    @staticmethod
-    def check_duplicate(table: str, column: str, value: str) -> bool:
-        # define what type this is checking
-        # sql statement to check if it exists
-        # return is: if check in sql return -> return True
-        return True
-
-    def get_statistics(self) -> json:
-        # .rowcount
-        # .column_names
-        # .description
-        # size
-        return {'database size': '10', 'table names': 'one, two, three'}
