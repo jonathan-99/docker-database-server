@@ -31,6 +31,7 @@ class ConfigData:
                     self.set_path(data["path"])
                     self.set_logging_path(data["logging_path"])
                     self.set_log_filename(data["log_filename"])
+                    self.set_src(data["src"])
                     self.set_data_location(data["data"])
                     self.set_server_port(data["simple-server-port"])
                     self.set_logging_level(data["logging-level"])
@@ -43,6 +44,7 @@ class ConfigData:
             self.set_path()
             self.set_logging_path()
             self.set_log_filename()
+            self.set_src()
             self.set_data_location()
             self.set_server_port()
             self.set_logging_level()
@@ -69,6 +71,10 @@ class ConfigData:
     def set_log_filename(self, filename="debugging.log") -> None:
         self.log_filename = filename
 
+
+    def set_src(self, src_input="src") -> None:
+        self.src = src_input
+
     def set_data_location(self, location="data/") -> None:
         self.data_location = location
 
@@ -90,6 +96,9 @@ class ConfigData:
     def get_log_filename(self) -> str:
         return self.log_filename
 
+    def get_src(self) -> str:
+        return self.src
+
     def get_data_location(self) -> str:
         return self.data_location
 
@@ -100,11 +109,14 @@ class ConfigData:
         return self.logging_level
 
     def show_all(self) -> str:
-        output_string = str(self.path) \
-            + str(self.logging_path) \
-            + str(self.log_filename) \
-            + str(self.data_location) \
-            + str(self.server_port) \
-            + str(self.logging_level) \
-            + str(self.database_name)
+        output_string = {"path": self.path,
+              "logging_path": self.logging_path,
+              "log_filename": self.log_filename,
+              "src": self.src,
+              "data": self.data_location,
+              "simple-server-port": self.server_port,
+              "logging-level": self.logging_level,
+              "database-name": self.database_name,
+              "test-database-name": self.testing_database_name
+        }
         return output_string

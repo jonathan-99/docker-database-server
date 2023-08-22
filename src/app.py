@@ -17,10 +17,12 @@ try:
     import src.functions as functions
     import src.incoming_data_class
     import src.injection_class
-    import src.sql_class
+    import src.sql_class as sql_class
+    import src.class_file
     import json
     import jinja2
     import os
+    import requests
 except Exception as e:
     print("importing error: ", e)
 
@@ -52,7 +54,8 @@ def api_create_table(table_name: str): # -> json:
     """
     logging.debug('api_create_table')
 
-    output = functions.enact_mysql_command('ADDTABLE', table_name, '')
+    a = sql_class.DataBase('main')
+    output = a.add_table(table_name)
     print("api_create_table: ", output)
     return output
 
@@ -71,6 +74,7 @@ def api_add_data(table_name: str, input_data: str): # -> json:
     :return (json) output_data:
     """
     logging.debug("api_add_data: " + table_name + " : " + input_data)
+
     new_list = []
     if table_name.lower() == 'weather':
         new_list = input_data.split(',')
@@ -78,32 +82,22 @@ def api_add_data(table_name: str, input_data: str): # -> json:
         new_list = input_data.split('-')
     else:
         print("api_add_data new list:", table_name)
-    return functions.enact_mysql_command('ADDDATA', table_name, new_list)
+
+    a = sql_class.DataBase('main')
+    return a.add_data_to_table(table_name, new_list)
 
 
 @app.route("/get/<string:get_what>")
 def api_get_data(get_what: str):
     """
-    Simple api to get all data from database through functions.py
-    :return:
+    Get data from a specific table.
+    :return: json
     """
-    print("api_get_data /get/:", get_what)
-    temp_output = functions.enact_mysql_command('GET-DATA', str(get_what).lower(), '')
-    if 'error' in str(temp_output).lower():
-        logging.debug('Getting data from all. ' + temp_output)
-        return temp_output
-    else:
-        multi_o = {}
-        temp_list = str(temp_output['send_sql() return']['sql output']).replace('"', '').replace(',', '').replace('[', '').replace(']', '').split(' ')
-        for item in temp_list:
-            output = functions.enact_mysql_command('GET-COLUMN', item, '')
-            multi_o.update(output)
-            print("output: ", output, ': ', multi_o)
-        print("/get/: ", multi_o)
-        multi_output = {"/get/", multi_o}
-        logging.debug('Getting data from all. ' + str(output))
-        print("print here: ", multi_output)
-    return multi_output
+    logging.debug("api_add_data: {}".format(get_what))
+
+    a = sql_class.DataBase('main')
+    output = a.get_data_from_table(get_what)
+    return output
 
 @app.route("/get-all-table")
 def api_get_table_names(): # -> json:
@@ -120,11 +114,10 @@ def api_get_column_data(get_what: str):
     Simple api to get all data from database through functions.py
     :return:
     """
-    temp = []
-    temp = get_what.split('-')
-    output = functions.enact_mysql_command('GET-DATA', 'column', temp)
-    logging.debug("api_get_all_data: " + output)
-    return jsonify(output)
+    logging.debug("api_get_all_data: {}".format(get_what))
+
+    a = sql_class.DataBase('main')
+    return a.get_data_from_table(a.get_database_name(), 'column', get_what)
 
 if __name__ == '__main__':
     config = functions.get_config()
