@@ -2,52 +2,85 @@ import unittest
 import os
 import src.sql_class as sql_class
 
-class TestDataBase(unittest.TestCase):
-    def test_db_exists(self):
-        """
-        Test if db exists
-        """
-        os.chdir("//")
-        table_name = 'test_table'
-        data = ['pinas', 'weather', "127.0.0.1"]
-        database_name = 'testing/database_name.db'
-        output = os.path.isfile(database_name)
-        self.assertTrue(output)
 
-    def test_table_exists(self):
-        """
-        Tests if the table exists
-        """
+class TestDataBase(unittest.TestCase):
+    def test__check_sql_statement(self):
         os.chdir("//")
-        table_name = 'test_table'
-        data = ['pinas', 'weather', "127.0.0.1"]
-        database_name = 'testing/database_name.db'
-        db = sql_class.DataBase()
-        #print("Testing pre-sets: {}, {}, {}, {}".format(table_name, data, database_name))
+        s = sql_class.DataBase('test')
+        with self.subTest('Good sql statement'):
+            input_sql = "SHOW *;"
+            output = s._check_sql_statement(input_sql)
+            self.assertTrue(output)
+        with self.subTest('Bad sql statement'):
+            input_sql = "now"
+            output = s._check_sql_statement(input_sql)
+            self.assertFalse(output)
+
+    def test__mysql_database_connection_details__(self):
+        os.chdir("//")
+        s = sql_class.DataBase('test')
+        with self.subTest('testing database connection host details'):
+            self.assertEqual(s._connection_host, '127.0.0.1')
+        with self.subTest('testing database connection user details'):
+            self.assertEqual(s._connection_user, 'user')
+        with self.subTest('testing database connection password details'):
+            self.assertEqual(s._connection_password, 'password')
+        with self.subTest('testing database connection host details'):
+            self.assertEqual(s._connection_port, 3306)
+
+    def test_check_database_exists(self):
+        os.chdir("//")
+        s = sql_class.DataBase('test')
+        with self.subTest('positive database exists'):
+            self.assertTrue(s.check_database_exists('testing/database_name.db'))
+        with self.subTest('negative database exists'):
+            self.assertFalse(s.check_database_exists('testing/stuff.db'))
+    def test_check_table_exists(self):
+        self.fail()
+
+    def test_add_table(self):
+        os.chdir("//")
+        s = sql_class.DataBase('test')
+        self.table_name_good = "test_table001"
+        self.ip_add_good = '127.0.0.1'
+        self.pi_name_good = ['pinas', 'weather']
+        self.speed = 12.2
+        self.time = "2023-08-22"
         with self.subTest('Test if test_table exists'):
-            statement = "SELECT name FROM {} WHERE type='table' AND name='{}'".format('sqlite_master', table_name)
-            output = db.send_sql(database_name, statement)
+            statement = "SELECT name FROM {} WHERE type='table' AND name='{}'".format('sqlite_master',\
+                                                                                      self.table_name_good)
+            output = s._send_sql(s.get_database_name(), statement)
+            self.assertEqual('[]', output['send_sql() return']['sql output'])
+        with self.subTest('create a table'):
+            sql_statement = "CREATE table {} VALUES ('{}', '{}')".format(self.table_name_good, 'speed INT', 'time TEXT')
+            output = s._send_sql(s.get_database_name(), sql_statement)
+            print("-- output -- {} -- {}".format(output, output['send_sql() return']['sql output']))
+            self.assertEqual('[]', output['send_sql() return']['sql output'])
+        with self.subTest('insert values into a table'):
+            sql_statement = "INSERT INTO {} VALUES ('{}', '{}')".format(self.table_name_good, self.pi_name_good[0],\
+                                                                        self.pi_name_good[1])
+            output = s._send_sql(s.get_database_name(), sql_statement)
+            print("-- output -- {} -- {}".format(output, output['send_sql() return']['sql output']))
             self.assertEqual('[]', output['send_sql() return']['sql output'])
 
-    def test_create_and_insert(self):
-        """
-        Tests inserting data after creating table
-        """
-        os.chdir("//")
-        table_name = 'test_table'
-        data = ['pinas', 'weather', r'127.0.0.1']
-        database_name = 'testing/database_name.db'
-        db = sql_class.DataBase()
-        with self.subTest('Insert and show all'):
-            """
-            statement_create = "CREATE TABLE {} (host TEXT, data_type TEXT, ip_add TEXT)".format(table_name)
-            output_1 = db.send_sql(database_name, statement_create)
-            """
-            statement_insert = "INSERT INTO {} VALUES ('{}', '{}', '{}')".format(table_name, data[0], data[1], data[2])
-            output_2 = db.send_sql(database_name, statement_insert)
-            print("Third test: ", output_2, output_2)
-            self.assertEqual('[]', output_2['send_sql() return']['sql output'])
-            statement_final = "SELECT * FROM {}".format(table_name)
-            output_3 = db.send_sql(database_name, statement_final)
-            print("Connection test: {}".format(output_3))
-            self.assertNotEquals('[]', output_3['send_sql() return']['sql output'])
+    def test_add_data_to_table(self):
+        self.fail()
+
+    def test_get_data_from_table(self):
+        self.fail()
+
+    def test_get_table_details(self):
+        self.fail()
+
+    def test_get_all(self):
+        self.fail()
+
+    def test_get_statistics(self):
+        self.fail()
+
+    def test__send_sql(self):
+        self.fail()
+
+
+if __name__ == '__main__':
+    unittest.main()

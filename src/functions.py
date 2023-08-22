@@ -20,48 +20,20 @@ try:
 except Exception as e:
     print("importing error: ", e)
 
-
-
-def enact_mysql_command(database: str, command: str, table_name: str, data) -> json:
+def is_injection_attack(input_statement: str) -> bool:
     """
-    A generic function which calls the mysql class and returns all data in json format.
-    :param command:
-    table_name:
-    :param data:
-    :return: json
+    This will check if the inputted value has an injection attack in it, through the injector class object.
     """
-    logging.debug('Enact_mysql_command: {}'.format(command))
-
-    # injectorObject = InjectorCheck()
-    # injectorObject.add(str(data))
-    # check = injectorObject.check_against_comment()
-    check = True
-
-    c = get_config('src/config.json')
-    c.set_database_name('src/database_name.db')
-    a = DataBase(c.get_database_name())
-
-
-    if check and (a.check_database_exists(a.database_name)):
-        if command == 'ADDTABLE':
-            output = a.add_table(table_name)
-        elif command == 'ADDDATA':
-            output = (a.add_data_to_table(table_name, data))
-        elif command == 'GET-DATA':
-            output = (a.get_data_from_table(table_name, data))
-        elif command == 'GET-COLUMN':
-            output = a.get_data(database, 'column', table_name)
-        else:
-            output = {'temp': 'these needs doing'}
-        logging.debug("enact_mysql_command() " + str(output))
-        return output
+    comment = '--'
+    if comment in input_statement:
+        return True
     else:
-        return {'Error with input being dodgy': 'something'}
+        return False
 
 
 def get_urls(filename: str) -> list:
     """
-
+    This function traverses a file for any urls so that later it can be displayed to the user as possible options to use.
     :param filename:
     :return:
     """
@@ -105,7 +77,7 @@ def get_directory_listing(input_directory='testing/') -> list:
     return urls
 
 
-def html_table(input_value) -> list:
+def html_table(input_value: list) -> list:
     """
     This function takes values and places them in a html list
     :param input_value:

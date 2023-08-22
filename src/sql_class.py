@@ -40,13 +40,20 @@ class DataBase:
         """
         #  -- get config data here. --
         c = config_file.ConfigData()
+        self.__database_name = ""
         if type_use == 'main':
             self.__database_name = c.get_database_name()
         else:
             self.__database_name = c.get_testing_database_name()
 
         self.__table_name = []
-        self.connection_details = self._mysql_database_connection_details__()
+        self._connection_user = 'user'
+        self._connection_password = 'password'
+        self._connection_host = '127.0.0.1'
+        self._connection_port = 3306
+
+    def get_database_name(self):
+        return self.__database_name
 
     @staticmethod
     def _check_sql_statement(inp: str) -> bool:
@@ -55,15 +62,6 @@ class DataBase:
         else:
             return False
 
-    def _mysql_database_connection_details__(self) -> object:
-        """
-        This function holds the basic details of a connection within the object.
-        """
-        self.__user = 'user'
-        self.__password = 'password'
-        self.__host = '127.0.0.1'
-        self.__port = 3306
-        return self
 
     @staticmethod
     def check_database_exists(database_name: str) -> bool:
