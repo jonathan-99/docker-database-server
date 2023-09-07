@@ -1,11 +1,20 @@
 import unittest
 import os
+import json
 import src.sql_class as sql_class
 
 
 class TestDataBase(unittest.TestCase):
+
+    def _json_checker(self, input_value):
+        try:
+            json.loads(input_value)
+        except ValueError as e:
+            return False
+        return True
+
     def test__check_sql_statement(self):
-        os.chdir("//")
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
         s = sql_class.DataBase('test')
         with self.subTest('Good sql statement'):
             input_sql = "SHOW *;"
@@ -17,7 +26,7 @@ class TestDataBase(unittest.TestCase):
             self.assertFalse(output)
 
     def test__mysql_database_connection_details__(self):
-        os.chdir("//")
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
         s = sql_class.DataBase('test')
         with self.subTest('testing database connection host details'):
             self.assertEqual(s._connection_host, '127.0.0.1')
@@ -29,7 +38,7 @@ class TestDataBase(unittest.TestCase):
             self.assertEqual(s._connection_port, 3306)
 
     def test_check_database_exists(self):
-        os.chdir("//")
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
         s = sql_class.DataBase('test')
         with self.subTest('positive database exists'):
             self.assertTrue(s.check_database_exists('testing/database_name.db'))
@@ -39,7 +48,10 @@ class TestDataBase(unittest.TestCase):
         self.fail()
 
     def test_add_table(self):
-        os.chdir("//")
+        """
+        This tests if a table exists and create a table, and add values into a table.
+        """
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
         s = sql_class.DataBase('test')
         self.table_name_good = "test_table001"
         self.ip_add_good = '127.0.0.1'
@@ -64,13 +76,43 @@ class TestDataBase(unittest.TestCase):
             self.assertEqual('[]', output['send_sql() return']['sql output'])
 
     def test_add_data_to_table(self):
-        self.fail()
+        """
+        This will test adding data to an existing table.
+        """
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
+        s = sql_class.DataBase('test')
+        input_data = ['one1', 'two2', 3]
+        with self.subTest('Add data to a table'):
+            self.assertTrue(s.add_data_to_table('test', input_data))
 
     def test_get_data_from_table(self):
-        self.fail()
+        """
+        This will test if the return is json format only.
+        """
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
+        s = sql_class.DataBase('test')
+        output_value = s.get_data_from_table('test', ['one1', 'two2'])
+        with self.subTest('format returned is json'):
+            format_value = self._json_checker(output_value)
+            self.assertTrue(format_value)
+        with self.subTest('what comes back'):
+            if '' in output_value['send_sql() return': 'sql output']:
+                self.assertTrue(True)
+            else:
+                internal_error = "sql_class.add_table() error - {}".format(output_value)
+                print(internal_error)
+                self.assertTrue(False)
 
     def test_get_table_details(self):
-        self.fail()
+        """
+        This will test if we get the column headers.
+        """
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
+        s = sql_class.DataBase('test')
+        output_value = s.get_table_details('test')
+        with self.subTest('is it in json format'):
+            format_value = self._json_checker(output_value)
+            self.assertTrue(format_value)
 
     def test_get_all(self):
         self.fail()

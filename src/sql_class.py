@@ -96,7 +96,7 @@ class DataBase:
             return False
 
     @staticmethod
-    def add_data_to_table(table_name: str, inp: list) -> bool:
+    def add_data_to_table(self, table_name: str, inp: list) -> bool:
         """
         This function will add data to a table. Assume columns exists
         """
@@ -107,7 +107,15 @@ class DataBase:
         for i in inp:
             sql += " ADD COLUMN {} VARCHAR(20)".format(i)
         sql += ";"
-        return True
+
+        output = self._send_sql(self.__database_name, sql)
+        if '' in output['send_sql() return': 'sql output']:
+            return True
+        else:
+            internal_error = "sql_class.add_table() error - {}".format(output)
+            logging.debug(internal_error)
+            print(internal_error)
+            return False
 
     def get_data_from_table(self, table_name: str, data: list) -> json:
         """
