@@ -4,42 +4,140 @@
 This is the main python file running the flask app.
 """
 
+
 try:
     import datetime
     import os
     import sys
     import time
     import logging
-    from flask import Flask, render_template
-    import functions
+    import flask
+    from flask import Flask, jsonify
+    from flask import request as Req
+    from flask import render_template
+    import src.functions as functions
+    import src.incoming_data_class
+    import src.injection_class
+    import src.sql_class as sql_class
+    import src.class_file as class_file
+    import json
+    import jinja2
+    import os
+    import requests
 except Exception as e:
     print("importing error: ", e)
 
+app = flask.Flask(__name__, template_folder='../templates')
+# os.system('sudo /etc/init.d/mysql start')
 
-app = Flask(__name__)
+
+def create_app(self, port_numb=7000) -> None:
+    app.run(debug=True, host='127.0.0.1', port=port_numb)
 
 
-@app.route('/')
-def index():
+@app.route('/', methods=['GET', 'POST'])
+def index(self, method):
     """
     Default index page which will show database stats: size, last entry.
     :return:
     """
-    return render_template('index.html')
+    if method.lower() == "post":
+        print("post")
+
+    elif method.lower() == "get":
+        print("Get")
+    else:
+        print("Some other request method")
+    return render_template("index.html")
 
 
-@app.route("/get-all-data")
-def api_get_all_data():
+@app.route("/create-table/<string:table_name>")
+def api_create_table(table_name: str) -> json:
     """
     Simple api to get all data from database through functions.py
     :return:
     """
-    return functions.get_all_data()
+    logging.debug('api_create_table')
+
+    a = sql_class.DataBase('main')
+    output = a.add_table(table_name)
+    print("api_create_table: ", output)
+    return output
+
+
+@app.route("/add-data/<string:device_name>/<string:table_name>/<string:input_data>")
+def api_add_data(deviceid: str, table_name: str, input_data: str) -> bool:
+    """
+    This takes data from any source, containing any data, and adds it to a known table.
+    requires input_data to be in the following format.
+    Parameters:
+        deviceid (str): client ip address
+        table_name (str) : weather
+        input_data (list): "20221209 23", 12.3, ...
+        table_name : test or main
+    Returns:
+        output (bool): True is success.
+    """
+    logging.debug("api_add_data: " + table_name + " : " + input_data)
+
+    print("Senders IP address - {}".format(Req.remote_addr))
+
+    new_list = []
+    if table_name.lower() == 'weather':
+        new_list = input_data.split(',')
+    elif table_name.lower() == 'test1':
+        new_list = input_data.split('-')
+    else:
+        print("api_add_data new list:", table_name)
+
+    a = sql_class.DataBase('main')
+    return a.add_data_to_table(deviceid, table_name, new_list)
+
+
+@app.route("/get/column-headers-from-this/<table_name>")
+def api_get_column_headers(table_name: str) -> json:
+    """
+    Get column headers from a specified table.
+    """
+    logging.debug("api_get_column_headers")
+
+    a = sql_class.DataBase('main')
+    output = a.get_column_names_from_table(table_name)
+    # this might return a comma separated value that needs to be handled.
+    return output
+
+
+@app.route("/get/<table_name>/<string:get_column>")
+def api_get_data(table_name: str, get_column: str) -> json:
+    """
+    Get data from a specific table and column.
+    :return: json
+    """
+    logging.debug("api_add_data: {}".format(get_column))
+
+    input_list = get_column.split()
+
+    a = sql_class.DataBase('main')
+    output = a.get_data_from_table(table_name, input_list)
+    return output
+
+
+@app.route("/get-all-table")
+def api_get_table_names():  # -> json:
+    """
+    Simple api to get all data from database through functions.py
+    :return:
+    """
+    logging.debug("Api_api_get_table_names()")
+
+    a = sql_class.DataBase('main')
+    output = a.get_table_names()
+    return output
 
 
 if __name__ == '__main__':
-    config = functions.get_config()
-    total_path = config.get_logging_path() + config.get_log_filename()
-    logging.basicConfig(filename=total_path, level=config.get_logging_level())
+    c = class_file.ConfigData()
+    total_path = c.get_logging_path() + c.get_log_filename()
+    logging.basicConfig(filename=total_path, level=c.get_logging_level())
 
-    app.run(debug=True, port=7000)
+    create_app(6005)
