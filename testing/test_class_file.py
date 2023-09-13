@@ -149,5 +149,6 @@ class TestConfigData(unittest.TestCase):
             output_result = configuration.show_all()
             self.assertEqual(expected_name, output_result)
 
+
 if __name__ == '__main__':
     unittest.main()
