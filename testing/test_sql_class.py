@@ -115,10 +115,26 @@ class TestDataBase(unittest.TestCase):
             self.assertTrue(format_value)
 
     def test_get_all(self):
-        self.fail()
+        """
+        This function will return all data in the table in a json format.
+        """
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
+        s = sql_class.DataBase('test')
+        output_value = s.get_table_details('test')
+        with self.subTest('is it in json format'):
+            format_value = self._json_checker(output_value)
+            self.assertTrue(format_value)
 
     def test_get_statistics(self):
-        self.fail()
+        """
+        This function gets all the meta data around the database in a json format.
+        """
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
+        s = sql_class.DataBase('test')
+        output_value = s.get_table_details('test')
+        with self.subTest('is it in json format'):
+            format_value = self._json_checker(output_value)
+            self.assertTrue(format_value)
 
     def test__send_sql(self):
         self.fail()
