@@ -41,10 +41,11 @@ def index(self, method):
     Default index page which will show database stats: size, last entry.
     :return:
     """
-    if method.lower() == "post":
+    self.method_type = method.lower()
+    if self.method_type == "post":
         print("post")
 
-    elif method.lower() == "get":
+    elif self.method_type == "get":
         print("Get")
     else:
         print("Some other request method")

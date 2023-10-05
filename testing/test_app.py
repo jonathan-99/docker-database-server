@@ -31,9 +31,22 @@ class TestApp(unittest.TestCase):
         This purely tests the function.
         """
         os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
+        application.create_app(6001)
         with self.subTest('Testing index'):
             return_value = application.index()
             print("{} - {}".format(self.__module__, return_value))
+
+
+    def test_api_get_table_names(self):
+        """
+        This test the functionality of only getting all data.
+        """
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
+        application.create_app(6002)
+        with self.subTest('Get a json format answer'):
+            return_value_01
+
+
 
 if __name__ == '__main__':
     unittest.main()
