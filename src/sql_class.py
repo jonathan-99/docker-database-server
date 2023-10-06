@@ -182,7 +182,7 @@ class DataBase:
         return output
 
     @staticmethod
-    def _send_sql(database_name: str, sql: str):
+    def _send_sql(database_name: str, sql: str) -> json:
         print(">> send_sql()")
         logging.debug(">> in send_sql..." + str(type(sql)) + sql)
         try:
