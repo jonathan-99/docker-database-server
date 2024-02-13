@@ -12,7 +12,7 @@ try:
     import time
     import logging
     import flask
-    from flask import Flask, jsonify
+    from flask import Flask, jsonify, request
     from flask import request as Req
     from flask import render_template
     import src.functions as functions
@@ -31,7 +31,7 @@ app = flask.Flask(__name__, template_folder='../templates')
 # os.system('sudo /etc/init.d/mysql start')
 
 
-def create_app(self, port_numb=7000) -> None:
+def create_app(self, port_numb=5000) -> None:
     app.run(debug=True, host='127.0.0.1', port=port_numb)
 
 
@@ -44,13 +44,26 @@ def index(self, method):
     self.method_type = method.lower()
     if self.method_type == "post":
         print("post")
-
     elif self.method_type == "get":
         print("Get")
     else:
         print("Some other request method")
     return render_template("index.html")
 
+@app.route('/add-weather-data', methods=['POST'])
+def process_json():
+    try:
+        data = request.json
+        source_ip = request.remote_addr
+
+        if data:
+            a = sql_class.DataBase('main')
+            a.add_weather_data_to_table(source_ip, 'main', data)
+            return jsonify({"message": "Received correct JSON data", "data": data, "source_ip": source_ip}), 200
+        else:
+            return jsonify({"message": "Received wrong JSON data", "data": data, "source_ip": source_ip}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 @app.route("/create-table/<string:table_name>")
 def api_create_table(table_name: str) -> json:

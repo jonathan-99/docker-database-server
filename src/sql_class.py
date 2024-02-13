@@ -115,6 +115,42 @@ class DataBase:
             print(internal_error)
             return False
 
+    def iterate_weather_json(self, json_data) -> list:
+        filenames = []
+
+        def _recurse(json_data):
+            if isinstance(json_data, dict):
+                for key, value in json_data.items():
+                    if key == 'filename' and isinstance(value, dict):
+                        filenames.extend(value.keys())
+                    else:
+                        _recurse(value)
+            elif isinstance(json_data, list):
+                for item in json_data:
+                    _recurse(item)
+
+        _recurse(json_data)
+        return filenames
+
+    def add_weather_data_to_table(self, deviceid: str, table_name: str, inp: json) -> bool:
+        """
+        This function will add data to a table. Assume columns exists
+        """
+        string_value = self.iterate_weather_json(inp)
+        sql = "INSERT TABLE {} VALUES {} {}".format(table_name, deviceid, string_value)
+        for i in inp:
+            sql += " ADD COLUMN {} VARCHAR(20)".format(i)
+        sql += ";"
+
+        output = self._send_sql(self.__database_name, sql)
+        if '' in output['send_sql() return': 'sql output']:
+            return True
+        else:
+            internal_error = "sql_class.add_table() error - {}".format(output)
+            logging.debug(internal_error)
+            print(internal_error)
+            return False
+
     def get_data_from_table(self, table_name: str, data: list) -> json:
         """
         This function returns the data from a table by each column.
