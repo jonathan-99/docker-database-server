@@ -6,55 +6,9 @@ pipeline {
             steps {
                 script {
                     echo 'Setting up environment'
-                    #!/bin/bash
                     python3 -m venv venv
-
-                    # Activate the virtual environment
                     source venv/bin/activate
-
-                    # Install dependencies from requirements.txt
                     pip install -r requirements.txt
-
-                    # Deactivate the virtual environment
-                    deactivate
-                }
-            }
-        }
-        stage('Docker') {
-            steps {
-                script {
-                    echo 'Installing docker file'
-                    #!/bin/bash
-
-                    # Create a Dockerfile
-                    cat <<EOF > Dockerfile
-                    # Use the official Raspberry Pi OS as a base image
-                    FROM arm32v7/debian:bullseye-slim
-
-                    # Update package lists
-                    RUN apt-get update
-
-                    # Install any necessary packages
-                    # Example:
-                    # RUN apt-get install -y <package>
-
-                    # Clean up
-                    RUN apt-get clean && \
-                        rm -rf /var/lib/apt/lists/*
-
-                    # Set the working directory
-                    WORKDIR /app
-
-                    # Copy your application files into the container
-                    # Example:
-                    # COPY . /app
-
-                    # Specify the command to run on container start
-                    CMD ["bash"]
-                    EOF
-
-                    # Build the Docker image
-                    docker build -t my_rpi_image .
                 }
             }
         }
@@ -62,11 +16,40 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image'
-                    sh 'docker build -t my_rpi_image .'
+                    // Create a Dockerfile
+                    sh '''
+                        cat <<EOF > Dockerfile
+                        # Use the official Raspberry Pi OS as a base image
+                        FROM arm32v7/debian:bullseye-slim
+
+                        # Update package lists
+                        RUN apt-get update
+
+                        # Install any necessary packages
+                        # Example:
+                        # RUN apt-get install -y <package>
+
+                        # Clean up
+                        RUN apt-get clean && \
+                            rm -rf /var/lib/apt/lists/*
+
+                        # Set the working directory
+                        WORKDIR /app
+
+                        # Copy your application files into the container
+                        # Example:
+                        # COPY . /app
+
+                        # Specify the command to run on container start
+                        CMD ["bash"]
+                        EOF
+
+                        # Build the Docker image
+                        docker build -t my_rpi_image .
+                    '''
                 }
             }
         }
-
         stage('Cleanup') {
             steps {
                 script {
