@@ -1,0 +1,73 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    echo 'Setting up environment'
+                    sh '''
+                    python3 -m venv venv
+                    source venv/bin/activate
+                    pip install -r requirements.txt
+                    '''
+                }
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo 'Building Docker image'
+                    // Create a Dockerfile
+                    sh '''
+                        cat <<EOF > Dockerfile
+                        # Use the official Raspberry Pi OS as a base image
+                        FROM arm32v7/debian:bullseye-slim
+
+                        # Update package lists
+                        RUN apt-get update
+
+                        # Install any necessary packages
+                        # Example:
+                        # RUN apt-get install -y <package>
+
+                        # Clean up
+                        RUN apt-get clean && \
+                            rm -rf /var/lib/apt/lists/*
+
+                        # Set the working directory
+                        WORKDIR /app
+
+                        # Copy your application files into the container
+                        # Example:
+                        # COPY . /app
+
+                        # Specify the command to run on container start
+                        CMD ["bash"]
+                        EOF
+
+                        # Build the Docker image
+                        docker build -t my_rpi_image .
+                    '''
+                }
+            }
+        }
+        stage('Cleanup') {
+            steps {
+                script {
+                    echo 'Cleaning up'
+                    // Any cleanup steps if needed
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Build successful'
+        }
+        failure {
+            echo 'Build failed'
+        }
+    }
+}

@@ -2,18 +2,17 @@ import unittest
 import src.class_file as class_file
 import os
 
+
 class TestConfigData(unittest.TestCase):
 
-    @classmethod
     def test_create_instance(self):
         """
         Can it create an instance?
         """
         os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
-        configuration = class_file.ConfigData()
-        self.assertIsInstance(self, obj=configuration, cls=class_file.ConfigData)
-
-
+        test_configuration = class_file.ConfigData()
+        with self.subTest('create an object'):
+            self.assertEqual(type(test_configuration), class_file.ConfigData)
 
     def test_database_name(self):
         """
@@ -21,33 +20,46 @@ class TestConfigData(unittest.TestCase):
         """
         os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
         configuration = class_file.ConfigData()
+        self.main_name = 'src/database_name.db'
+        self.test_name = 'testing/database_name.db'
+        self.bad_setting_name = 'this/is/a/good/test.db'
+        self.return_test_main_name = configuration.get_database_name()
+        self.return_main_name = configuration.get_testing_database_name()
         with self.subTest('get_database_name(self)'):
-            expected_name = 'src/database_name.db'
-            output_result = configuration.get_database_name()
-            self.assertEqual(expected_name, output_result)
+            self.assertEqual(self.return_test_main_name, self.main_name)
+        with self.subTest('get_testing_database_name()'):
+            self.assertEqual(self.return_test_main_name, self.test_name)
         with self.subTest('set_database_name(self)'):
-            input_name = 'testing/database_name.db'
-            configuration.set_database_name(input_name)
-            output_result = configuration.get_database_name()
-            self.assertEqual(input_name, output_result)
+            # setting the test db name in the main db name
+            self.assertTrue(configuration.set_database_name(self.test_name))
+            # confirm the correct value has been accepted
+            test_return_set_value = configuration.get_database_name()
+            self.assertEqual(self.test_name, test_return_set_value)
+        with self.subTest('set_database_name(self) BAD version'):
+            # setting db name where the file doesn't exist
+            self.assertFalse(configuration.set_database_name(self.bad_setting_name))
 
-
-
-    def test_setting_path(self):
+    def test_path(self):
         """
         This tests the setting and getting of path config.
         """
         os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
         configuration = class_file.ConfigData()
-        with self.subTest('get_path_name(self)'):
-            expected_name = '/opt/docker-database-server/'
-            output_result = configuration.get_path()
-            self.assertEqual(expected_name, output_result)
-        with self.subTest('set_path_name(self)'):
-            input_name = '/test/docker-database-server/'
-            configuration.set_path(input_name)
-            output_result = configuration.get_path()
-            self.assertEqual(input_name, output_result)
+        self.expected_path_name = '/opt/docker-database-server/'
+        self.bad_path_name = '/test/docker-database-server/'
+        self.output_result = configuration.get_path()
+        with self.subTest('get_path_name() return a string'):
+            self.assertTrue(type(self.output_result), str)
+        with self.subTest('get_path_name(self) returns the correct path'):
+            self.assertEqual(self.expected_path_name, self.output_result)
+        with self.subTest('correct set_path_name(self) returns true'):
+            return_result = configuration.set_path(self.expected_path_name)
+            self.assertTrue(return_result)
+            self.assertEqual(self.expected_path_name, return_result)
+        with self.subTest('enter a bad path and reject'):
+            return_bad_path_error = configuration.set_path(self.bad_path_name)
+            self.assertEqual(type(return_bad_path_error), bool)
+            self.assertFalse(return_bad_path_error)
 
     def test_logging_path(self):
         """
@@ -129,7 +141,6 @@ class TestConfigData(unittest.TestCase):
             output_result = configuration.get_logging_level()
             self.assertEqual(input_name, output_result)
 
-
     def test_show_all(self):
         """
         This tests the show_all function works.
@@ -148,6 +159,7 @@ class TestConfigData(unittest.TestCase):
                              'test-database-name': 'testing/database_name.db'}
             output_result = configuration.show_all()
             self.assertEqual(expected_name, output_result)
+
 
 if __name__ == '__main__':
     unittest.main()

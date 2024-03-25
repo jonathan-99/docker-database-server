@@ -62,7 +62,6 @@ class DataBase:
         else:
             return False
 
-
     @staticmethod
     def check_database_exists(database_name: str) -> bool:
         """
@@ -95,19 +94,62 @@ class DataBase:
             print(internal_error)
             return False
 
-    @staticmethod
-    def add_data_to_table(table_name: str, inp: list) -> bool:
+    def add_data_to_table(self, deviceid: str, table_name: str, inp: list) -> bool:
         """
         This function will add data to a table. Assume columns exists
         """
         string_value = ""
         for i in inp:
-            string_value += str(i)
-        sql = "INSERT TABLE {} VALUES {}".format(table_name, string_value)
+            string_value += str(i) + " "
+        sql = "INSERT TABLE {} VALUES {} {}".format(table_name, deviceid, string_value)
         for i in inp:
             sql += " ADD COLUMN {} VARCHAR(20)".format(i)
         sql += ";"
-        return True
+
+        output = self._send_sql(self.__database_name, sql)
+        if '' in output['send_sql() return': 'sql output']:
+            return True
+        else:
+            internal_error = "sql_class.add_table() error - {}".format(output)
+            logging.debug(internal_error)
+            print(internal_error)
+            return False
+
+    def iterate_weather_json(self, json_data) -> list:
+        filenames = []
+
+        def _recurse(json_data):
+            if isinstance(json_data, dict):
+                for key, value in json_data.items():
+                    if key == 'filename' and isinstance(value, dict):
+                        filenames.extend(value.keys())
+                    else:
+                        _recurse(value)
+            elif isinstance(json_data, list):
+                for item in json_data:
+                    _recurse(item)
+
+        _recurse(json_data)
+        return filenames
+
+    def add_weather_data_to_table(self, deviceid: str, table_name: str, inp: json) -> bool:
+        """
+        This function will add data to a table. Assume columns exists
+        """
+        string_value = self.iterate_weather_json(inp)
+        sql = "INSERT TABLE {} VALUES {} {}".format(table_name, deviceid, string_value)
+        for i in inp:
+            sql += " ADD COLUMN {} VARCHAR(20)".format(i)
+        sql += ";"
+
+        output = self._send_sql(self.__database_name, sql)
+        if '' in output['send_sql() return': 'sql output']:
+            return True
+        else:
+            internal_error = "sql_class.add_table() error - {}".format(output)
+            logging.debug(internal_error)
+            print(internal_error)
+            return False
 
     def get_data_from_table(self, table_name: str, data: list) -> json:
         """
@@ -128,6 +170,25 @@ class DataBase:
         print("get_data_from_table -- {}".format(output))
         return output
 
+    def get_table_names(self) -> json:
+        """
+        This will just return table names.
+        """
+        sql = "SELECT name FROM sqlite_master WHERE type='table';"
+        output = self._send_sql(self.__database_name, sql)
+        return output
+
+    def get_column_names_from_table(self, table_name: str) -> json:
+        """
+        This will return all column headers from a specified table in json format.
+        """
+        sql = ("SELECT * from {}".format(table_name))
+        output = self._send_sql(self.__database_name, sql)
+
+        # need to process output to select just the headers of the rows.
+        print("Temp -- {}".format(output))
+        return output
+
     def get_table_details(self, input_value: str) -> json:
         """
         This function returns column headings.
@@ -145,16 +206,19 @@ class DataBase:
         return output
 
     def get_statistics(self) -> json:
+        """
+        This function gets the following information from the database.
         # .rowcount
-        # .column_names
+        #  .column_names
         # .description
         # size
+        """
         sql = "SELECT count() FROM PRAGMA_TABLE_INFO({});".format(self.__database_name)
         output = self._send_sql(self.__database_name, sql)
         return output
 
     @staticmethod
-    def _send_sql(database_name: str, sql: str):
+    def _send_sql(database_name: str, sql: str) -> json:
         print(">> send_sql()")
         logging.debug(">> in send_sql..." + str(type(sql)) + sql)
         try:
