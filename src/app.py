@@ -24,6 +24,7 @@ try:
     import jinja2
     import os
     import requests
+    import handle_weather_data
 except Exception as e:
     print("importing error: ", e)
 
@@ -50,20 +51,23 @@ def index(self, method):
         print("Some other request method")
     return render_template("index.html")
 
+
 @app.route('/add-weather-data', methods=['POST'])
 def process_json():
     try:
         data = request.json
         source_ip = request.remote_addr
 
+        logging.debug(f'process_json() - POST from  {source_ip} - {datetime.datetime.now()}')
+
         if data:
-            a = sql_class.DataBase('main')
-            a.add_weather_data_to_table(source_ip, 'main', data)
+            return_data = handle_weather_data.manage_weather_data(data, source_ip)
             return jsonify({"message": "Received correct JSON data", "data": data, "source_ip": source_ip}), 200
         else:
             return jsonify({"message": "Received wrong JSON data", "data": data, "source_ip": source_ip}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
 
 @app.route("/create-table/<string:table_name>")
 def api_create_table(table_name: str) -> json:
