@@ -1,0 +1,25 @@
+{
+  "weatherConfiguration": {
+    "metadata": {
+      "version": "float",
+      "date_submitted": "string",
+      "filename": "string"
+    },
+    "data": {
+      "filename": {
+        "YYYYMMDD HH": "float",
+        "YYYYMMDD HH": "float"
+      }
+    },
+    "relationship": {
+
+    },
+    "validation": {
+      "version_validation": "[0-9]*.[0-9][0-9]",
+      "date_submitted_validation": "2[0-9]+-[0-9]+-[0-9]+",
+      "filename_validation": "[a-z]*.txt",
+      "hour_validation": "2[0-9]+-[0-9]+-[0-9]+ [0-9][0-9]",
+      "speed_validation": "[0-9]*.[0-9][0-9]"
+    }
+  }
+}
