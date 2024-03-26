@@ -10,7 +10,7 @@ import json
 ## need to create table format.
 
 
-def manage_weather_data(self, input_json, input_src_ip: str) -> json:
+def manage_weather_data(input_json, input_src_ip: str) -> json:
     """
     This will accept the model json, validate it, then put it into the database.
     """
