@@ -14,6 +14,8 @@ try:
     import flask
     from flask import Flask, jsonify, request
     from flask import render_template
+    from flasgger import Swagger, LazyJSONEncoder, LazyString, swag_from
+    from flask_swagger_ui import get_swaggerui_blueprint
     import src.functions as functions
     import src.incoming_data_class
     import src.injection_class
@@ -23,22 +25,42 @@ try:
     import jinja2
     import os
     import handle_weather_data
-    from src.swagger_api import setup_swagger
 except Exception as e:
     print("importing error: ", e)
 
 app = flask.Flask(__name__, template_folder='../templates')
 # os.system('sudo /etc/init.d/mysql start')
-setup_swagger(app)
+# setup_swagger(app)
 
+def setup_swagger(app):
+    app.json_encoder = LazyJSONEncoder
 
-def create_app(port_numb=5000) -> None:
-    try:
-        app.run(debug=True, host='127.0.0.1', port=port_numb)
-    except Exception as err:
-        logging.error(f"Error running Flask app: {err}")
-        print(f'create_app() - {err}')
+    swagger_template = dict(
+        info={
+            'title': LazyString(lambda: 'My first Swagger UI document'),
+            'version': LazyString(lambda: '0.1'),
+            'description': LazyString(
+                lambda: 'This documements Hello World functionality after executing GET.'),
+        },
+        host=LazyString(lambda: request.host)
+    )
 
+    swagger_config = {
+        "headers": [],
+        "specs": [
+            {
+                "endpoint": '/apidocs',
+                "route": '/stuff',
+                "rule_filter": lambda rule: True,
+                "model_filter": lambda tag: True,
+            }
+        ],
+        "static_url_path": "/flasgger_static",
+        "swagger_ui": True,
+        "specs_route": "/apidocs/"
+    }
+
+    return swagger_template, swagger_config
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -134,7 +156,7 @@ def api_get_column_headers(table_name: str) -> json:
     # this might return a comma separated value that needs to be handled.
     return output
 
-
+@swag_from("swagger.yml", methods=['GET'])
 @app.route("/get/<table_name>/<string:get_column>")
 def api_get_data(table_name: str, get_column: str) -> json:
     """
@@ -149,9 +171,9 @@ def api_get_data(table_name: str, get_column: str) -> json:
     output = a.get_data_from_table(table_name, input_list)
     return output
 
-
+@swag_from("swagger.yml", methods=['GET'])
 @app.route("/get-all-table")
-def api_get_table_names():  # -> json:
+def api_get_table_names():
     """
     Simple api to get all data from database through functions.py
     :return:
@@ -160,18 +182,83 @@ def api_get_table_names():  # -> json:
     try:
         a = sql_class.DataBase('main')
         output = a.get_table_names()
-        return output
+        return jsonify(output)
+    except FileNotFoundError as file_err:
+        logging.error(f'Error in api_get_table_names() - {file_err}')
+        return jsonify({"error": "Database file not found"}), 500
     except Exception as err:
         logging.error(f'Error in api_get_table_names() - {err}')
+        return jsonify({"error": "Internal Server Error"}), 500
+
+# Swagger documentation route
+#@app.route('/stuff')
+#def get_swagger():
+#    swag = Swagger(app)
+#    swag['info']['version'] = "3.0.0"
+#    swag['info']['title'] = "My API"
+#    return jsonify(swag)
 
 
-if __name__ == '__main__':
+@app.route('/stuff')
+def get_swagger():
+    swagger_config = {
+        "headers": [],
+        "specs": [
+            {
+                "endpoint": '/apidocs',
+                "route": '/stuff',
+                "rule_filter": lambda rule: True,
+                "model_filter": lambda tag: True,
+            }
+        ],
+        "static_url_path": "/flasgger_static",
+        "swagger_ui": True,
+        "specs_route": "/apidocs/"
+    }
+    return swagger_config
+
+# Function to get the list of endpoints
+def get_endpoints():
+    endpoints = []
+    for rule in app.url_map.iter_rules():
+        if rule.endpoint != 'static':
+            endpoints.append(rule.endpoint)
+    return endpoints
+
+
+def create_app(port_numb=5000) -> None:
+    try:
+        app.run(debug=True, host='127.0.0.1', port=port_numb)
+    except Exception as err:
+        logging.error(f"Error running Flask app: {err}")
+        print(f'create_app() - {err}')
+
+def setup_app():
     try:
         c = class_file.ConfigData()
         total_path = c.get_logging_path() + c.get_log_filename()
-        print(f'total_path - {total_path}')
         logging.basicConfig(filename=total_path, level=c.get_logging_level())
-        print(f'main() - {c.show_all()}')
-        create_app(6005)
+        logging.debug(f'main() - {c.show_all()}')
+
+        # Before running the app, set up Swagger
+        s_template, s_config = setup_swagger(app)
+        swagger = Swagger(app, template=s_template, config=s_config)
+
+        # Ensure all endpoints are printed before running the app
+        print("List of endpoints:", get_endpoints())
+    except Exception as e:
+        logging.error(f"Error initializing app: {e}")
+
+def run_app(port_numb=5000):
+    try:
+        create_app(port_numb)
+    except Exception as err:
+        logging.error(f"Error running Flask app: {err}")
+        print(f'create_app() - {err}')
+
+if __name__ == '__main__':
+    try:
+        setup_app()
+        run_app(6005)
     except Exception as e:
         logging.error(f"Error initializing app: {e}")

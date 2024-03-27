@@ -1,35 +1,16 @@
-from flask import Flask
-from flasgger import Swagger, LazyString, LazyJSONEncoder
+#!/usr/bin/env python3
 
-def setup_swagger(app):
-    app.json_encoder = LazyJSONEncoder
-
-    swagger_template = {
-        "info": {
-            "title": "My API",
-            "description": "API description",
-            "version": "1.0"
-        },
-        "servers": [{"url": "http://localhost:5000"}],
-    }
-
-    swagger_config = {
-        "headers": [],
-        "specs": [
-            {
-                "endpoint": 'hello_world',
-                "route": '/hello_world.json',
-                "rule_filter": lambda rule: True,
-                "model_filter": lambda tag: True,
-            }
-        ],
-        "static_url_path": "/flasgger_static",
-        "swagger_ui": True,
-        "specs_route": "/apidocs/"
-    }
-
-    swagger = Swagger(app, template=swagger_template, config=swagger_config)
+# from flask import Flask
+from flasgger import Swagger, LazyJSONEncoder, LazyString
+from requests import request
+# from app import app  # Import the Flask app instance from app.py
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
+#if __name__ == '__main__':
+#    app = Flask(__name__)
+    # Setup Swagger using the Flask app instance from app.py
+#    setup_swagger(app)
+    # Setup Swagger
+#    setup_swagger(app)
+#    app.run(debug=True)
