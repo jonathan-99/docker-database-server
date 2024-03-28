@@ -14,6 +14,7 @@ try:
     import flask
     from flask import Flask, jsonify, request
     from flask import render_template
+    from flask import send_from_directory
     from flasgger import Swagger, LazyJSONEncoder, LazyString, swag_from
     from flask_swagger_ui import get_swaggerui_blueprint
     import src.functions as functions
@@ -29,38 +30,68 @@ except Exception as e:
     print("importing error: ", e)
 
 app = flask.Flask(__name__, template_folder='../templates')
+# Configure root logger to log to console with DEBUG level
+logging.basicConfig(level=logging.DEBUG)
 # os.system('sudo /etc/init.d/mysql start')
 # setup_swagger(app)
 
 def setup_swagger(app):
+    """
+    Reference for yml editor - https://editor.swagger.io/
+    """
     app.json_encoder = LazyJSONEncoder
 
     swagger_template = dict(
         info={
-            'title': LazyString(lambda: 'My first Swagger UI document'),
-            'version': LazyString(lambda: '0.1'),
-            'description': LazyString(
-                lambda: 'This documements Hello World functionality after executing GET.'),
-        },
-        host=LazyString(lambda: request.host)
+            'swagger': '2.0',
+            'title': 'My first Swagger UI document',
+            'version': '0.1',
+            'description': 'This document Hello World functionality after executing GET.'
+        }
     )
 
-    swagger_config = {
-        "headers": [],
-        "specs": [
-            {
-                "endpoint": '/apidocs',
-                "route": '/stuff',
-                "rule_filter": lambda rule: True,
-                "model_filter": lambda tag: True,
-            }
-        ],
-        "static_url_path": "/flasgger_static",
-        "swagger_ui": True,
-        "specs_route": "/apidocs/"
-    }
+    # Define the route to serve Swagger UI files
+    @app.route('/swagger_ui/<path:path>')
+    def send_swagger_ui(path):
+        return send_from_directory('swagger_ui', path)
+
+    # Update the route to return the Swagger UI HTML
+    @app.route('/swagger_ui')
+    def swagger_ui():
+        return render_template('index.html')
+
+    def rule_filter():
+        return True
+
+    def model_filter():
+        return True
+
+    @app.route('/stuff')
+    def get_swagger():
+        swagger_config = {
+            "headers": [],
+            "specs": [
+                {
+                    "endpoint": '/apidocs',
+                    "route": '/',
+                    "rule_filter": rule_filter(),
+                    "model_filter": model_filter(),
+                }
+            ],
+            "static_url_path": "/swagger-ui",
+            "swagger_ui": True,
+            "specs_route": "/apidocs/"
+        }
+        return swagger_config
+
+    swagger_config = get_swagger()
+    #print("swagger_config:", swagger_config)
+    #print("type(swagger_config):", type(swagger_config))
 
     return swagger_template, swagger_config
+
+
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -156,7 +187,7 @@ def api_get_column_headers(table_name: str) -> json:
     # this might return a comma separated value that needs to be handled.
     return output
 
-@swag_from("swagger.yml", methods=['GET'])
+@swag_from("swagger.json", methods=['GET'])
 @app.route("/get/<table_name>/<string:get_column>")
 def api_get_data(table_name: str, get_column: str) -> json:
     """
@@ -171,7 +202,7 @@ def api_get_data(table_name: str, get_column: str) -> json:
     output = a.get_data_from_table(table_name, input_list)
     return output
 
-@swag_from("swagger.yml", methods=['GET'])
+@swag_from("swagger.yaml", methods=['GET'])
 @app.route("/get-all-table")
 def api_get_table_names():
     """
@@ -190,32 +221,6 @@ def api_get_table_names():
         logging.error(f'Error in api_get_table_names() - {err}')
         return jsonify({"error": "Internal Server Error"}), 500
 
-# Swagger documentation route
-#@app.route('/stuff')
-#def get_swagger():
-#    swag = Swagger(app)
-#    swag['info']['version'] = "3.0.0"
-#    swag['info']['title'] = "My API"
-#    return jsonify(swag)
-
-
-@app.route('/stuff')
-def get_swagger():
-    swagger_config = {
-        "headers": [],
-        "specs": [
-            {
-                "endpoint": '/apidocs',
-                "route": '/stuff',
-                "rule_filter": lambda rule: True,
-                "model_filter": lambda tag: True,
-            }
-        ],
-        "static_url_path": "/flasgger_static",
-        "swagger_ui": True,
-        "specs_route": "/apidocs/"
-    }
-    return swagger_config
 
 # Function to get the list of endpoints
 def get_endpoints():
@@ -241,11 +246,11 @@ def setup_app():
         logging.debug(f'main() - {c.show_all()}')
 
         # Before running the app, set up Swagger
-        s_template, s_config = setup_swagger(app)
-        swagger = Swagger(app, template=s_template, config=s_config)
+        swagger_template, swagger_config = setup_swagger(app)
+        swagger = Swagger(app, template=swagger_template, config=swagger_config)
 
         # Ensure all endpoints are printed before running the app
-        print("List of endpoints:", get_endpoints())
+        logging.debug("List of endpoints:", get_endpoints())
     except Exception as e:
         logging.error(f"Error initializing app: {e}")
 

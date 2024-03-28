@@ -1,0 +1,45 @@
+openapi: 3.0.0
+info:
+    title: Sample API
+    description: stuff
+    version: "1.0"
+servers:
+  - url: "http://127.0.0.1:6005"
+    description: stuff v2
+tags:
+  - name: This is SwaggerUI for database server
+
+paths:
+  /get-all-table:
+    get:
+      summary: Retrieve all table names
+      description: Endpoint to retrieve all table names from the database.
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+  /get/{table_name}/{get_column}:
+    get:
+      summary: Get specific table name that is stated.
+      description: blah
+      parameters:
+        - name: table_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: get_column
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Bad request
+        '500':
+          description: service down
