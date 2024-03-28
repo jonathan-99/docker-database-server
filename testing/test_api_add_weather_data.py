@@ -41,7 +41,9 @@ class TestAddWeatherDataEndpoint(unittest.TestCase):
 
         # Send a POST request to the Flask app
         try:
+            print(f'first one - {data}')
             response = requests.post('http://127.0.0.1:6005/add-weather-data', json=data)
+            print(f'response - {response.status_code}')
         except EOFError as err:
             print(f'This is a send error - {err}')
         except ConnectionError as conn_err:

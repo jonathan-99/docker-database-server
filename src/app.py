@@ -25,7 +25,7 @@ try:
     import json
     import jinja2
     import os
-    import src.handle_weather_data
+    import src.handle_weather_data as handle_weather_data
 except Exception as e:
     print("importing error: ", e)
 
@@ -34,6 +34,7 @@ app = flask.Flask(__name__, template_folder='../templates')
 logging.basicConfig(level=logging.DEBUG)
 # os.system('sudo /etc/init.d/mysql start')
 # setup_swagger(app)
+
 
 def setup_swagger(app):
     """
@@ -113,10 +114,12 @@ def index():
 
 
 @app.route('/add-weather-data', methods=['POST'])
-def process_json():
+def process_json(input_json: json):
     try:
+        print(f'process_json() - {input_json}')
         data = request.json
         source_ip = request.remote_addr
+        print(f'process_json() - next - {source_ip} - {data}')
 
         logging.debug(f'process_json() - POST from  {source_ip} - {datetime.datetime.now()}')
 
@@ -125,7 +128,7 @@ def process_json():
 
             return_data = handle_weather_data.manage_weather_data(data, source_ip)
             print(f'process_json() - here {return_data}')
-            return jsonify({"message": "Received correct JSON data", "data": data, "source_ip": source_ip}), 200
+            return jsonify({'specific message': "Received correct JSON data", "data": data, "source_ip": source_ip}), 200
         else:
             return jsonify({"message": "Received wrong JSON data", "data": data, "source_ip": source_ip}), 200
 
