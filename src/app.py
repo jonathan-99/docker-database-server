@@ -25,7 +25,7 @@ try:
     import json
     import jinja2
     import os
-    import handle_weather_data
+    import src.handle_weather_data
 except Exception as e:
     print("importing error: ", e)
 
@@ -121,6 +121,8 @@ def process_json():
         logging.debug(f'process_json() - POST from  {source_ip} - {datetime.datetime.now()}')
 
         if data:
+            handle_weather_data.refactor_incoming_json_into_weather_model(data)
+
             return_data = handle_weather_data.manage_weather_data(data, source_ip)
             print(f'process_json() - here {return_data}')
             return jsonify({"message": "Received correct JSON data", "data": data, "source_ip": source_ip}), 200
@@ -250,7 +252,7 @@ def setup_app():
         swagger = Swagger(app, template=swagger_template, config=swagger_config)
 
         # Ensure all endpoints are printed before running the app
-        logging.debug("List of endpoints:", get_endpoints())
+        logging.debug(f"List of endpoints: {get_endpoints()}")
     except Exception as e:
         logging.error(f"Error initializing app: {e}")
 
