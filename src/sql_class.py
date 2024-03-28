@@ -175,7 +175,10 @@ class DataBase:
         This will just return table names.
         """
         sql = "SELECT name FROM sqlite_master WHERE type='table';"
-        output = self._send_sql(self.__database_name, sql)
+        try:
+            output = self._send_sql(self.__database_name, sql)
+        except Exception as err:
+            output = {'this is an error in get_table_names()': str(err)}
         return output
 
     def get_column_names_from_table(self, table_name: str) -> json:

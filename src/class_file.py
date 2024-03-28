@@ -17,50 +17,48 @@ class ConfigData:
     """
 
     def __init__(self):
-        self.__get_config('src/config.json')
-        self.path = ""
-        self.logging_path = ""
-        self.log_filename = ""
-        self.src = ""
-        self.data_location = ""
-        self.server_port = 0
-        self.logging_level = "DEBUG"
-        self.database_name = ""
-        self.testing_database_name = ""
+        config_file_path = self._get_absolute_path('config.json')
+        self.__get_config(config_file_path)
 
-    def __get_config(self, input_file_name="src/config.json") -> None:
+    def _get_absolute_path(self, local_filename):
+        # If the filename is provided without a path, assume it is in the 'src' directory
+        if not os.path.isabs(local_filename):
+            data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), local_filename)
+            logging.debug(f'data_dir - {data_dir}')
+        return data_dir
+
+    def __get_config(self, input_file_name):
         """
         Get the config from a json file and return an object class of that data.
         """
-        type_of_file = "json"
-        if type_of_file == "json":
-            try:
-                with open(input_file_name, 'r') as fileObject:
-                    data = json.load(fileObject)
-                    self.set_path(data["path"])
-                    self.set_logging_path(data["logging_path"])
-                    self.set_log_filename(data["log_filename"])
-                    self.set_src(data["src"])
-                    self.set_data_location(data["data"])
-                    self.set_server_port(data["simple-server-port"])
-                    self.set_logging_level(data["logging-level"])
-                    self.set_database_name(data["database-name"])
-                    self.set_testing_database_name(data["test-database-name"])
-            except FileExistsError or FileExistsError as err:
-                logging.error("Getting config error: " + str(err))
-        else:
-            print("was expecting json as a config file")
-            self.set_path()
-            self.set_logging_path()
-            self.set_log_filename()
-            self.set_src()
-            self.set_data_location()
-            self.set_server_port()
-            self.set_logging_level()
-            self.set_database_name()
-            self.set_testing_database_name()
-        logging.debug("We found these configs: " + str(self.show_all()))
-        return
+        logging.debug(f'__get_config() - {input_file_name}')
+        try:
+            with open(input_file_name, 'r') as fileObject:
+                data = json.load(fileObject)
+                self.path = data.get("path", "")
+                self.logging_path = data.get("../logging_path", "")
+                self.log_filename = data.get("log_filename", "")
+                self.src = data.get("src", "")
+                self.data_location = data.get("data", "")
+                self.server_port = data.get("simple-server-port", 0)
+                self.logging_level = data.get("logging-level", "DEBUG")
+                self.database_name = data.get("database-name", "")
+                self.testing_database_name = data.get("test-database-name", "")
+        except FileNotFoundError as err:
+            logging.error("Config file not found: " + str(err))
+
+    def show_all(self):
+        return {
+            "path": self.path,
+            "logging_path": self.logging_path,
+            "log_filename": self.log_filename,
+            "src": self.src,
+            "data_location": self.data_location,
+            "server_port": self.server_port,
+            "logging_level": self.logging_level,
+            "database_name": self.database_name,
+            "testing_database_name": self.testing_database_name
+        }
 
     def set_testing_database_name(self, db_name="testing/database_name.db") -> bool:
         """
