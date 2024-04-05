@@ -30,7 +30,7 @@ except Exception as e:
     print("importing error: ", e)
 
 app = flask.Flask(__name__, template_folder='../templates')
-# Configure root logger to log to console with DEBUG level
+app.debug = True
 logging.basicConfig(level=logging.DEBUG)
 # os.system('sudo /etc/init.d/mysql start')
 # setup_swagger(app)
