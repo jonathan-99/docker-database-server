@@ -7,6 +7,7 @@ try:
     from http.server import BaseHTTPRequestHandler, HTTPServer
     from src import functions
     from src import render_table_web_page as render_table
+    from src import sql_class as sql_class
     import logging
     import os
 except ImportError as e:
@@ -19,7 +20,7 @@ class WebServer(BaseHTTPRequestHandler):
     logging.debug("Within WebServer Class")
     import platform
     if platform.system() == "Windows":
-        os.chdir("C:/Users/local_admin/PycharmProjects/docker-database-server")
+        os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
     else:
         pass
 
@@ -57,17 +58,18 @@ def setup() -> None:
     set up pre-pages
     :return: None
     """
-    #  os.chdir("C:/Users/local_admin/PycharmProjects/docker-database-server/")
+    os.chdir("C:/Users/JonathanL/PycharmProjects/docker-database-server/")
     render_table.generate_html_page("table")
 
     # list tables and column headers for sql database
-    sql_stats = functions.enact_mysql_command('GET-DATA', 'all', '')
+    sql_object = sql_class.DataBase('main')
+    sql_stats = sql_object.get_all()
     print("sql stats: ", sql_stats)
 
     for table in sql_stats['output from get']:
         t = str(table).replace("'", '').replace(',', '').replace('(', '').replace(')', '')
         print("Table: ", t)
-        output = functions.enact_mysql_command('GET-DATA', 'tables', t)
+        output = sql_object.get_table_details(t)
         print("Table {}, contains {}.".format(t, output['output from get']))
 
 

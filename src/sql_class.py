@@ -204,7 +204,8 @@ class DataBase:
         """
         This function will return everything
         """
-        sql = 'SHOW tables;'
+        # sql = f'show tables;'
+        sql = f"SELECT name FROM sqlite_master WHERE type='table';"
         output = self._send_sql(self.__database_name, sql)
         return output
 
