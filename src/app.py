@@ -100,6 +100,20 @@ def index():
     Default index page which will show database stats: size, last entry.
     :return:
     """
+
+    logging.debug(f"Index() - current directory: {os.getcwd()}")
+    # get table details
+    # list tables and column headers for sql database
+    sql_object = sql_class.DataBase('main')
+    return_urls = functions.get_urls('app.py')
+    sql_stats = sql_object.get_all()
+    print(f'index() sql_stats - {type(sql_stats)} - urls {return_urls} -  stats {sql_stats}')
+    import render_table_web_page
+    table_element = render_table_web_page.html_table(return_urls)
+    print(f'index() - {table_element}')
+    # inject them into index.html
+    functions.append_to_div_in_html('../templates/index.html', table_element)
+    # update app instance if necessary
     try:
         if request.method == 'POST':
             print("POST request received")
@@ -143,12 +157,24 @@ def api_create_table(table_name: str) -> json:
     Simple api to get all data from database through functions.py
     :return:
     """
+
     logging.debug('api_create_table')
 
     a = sql_class.DataBase('main')
-    output = a.add_table(table_name)
-    print("api_create_table: ", output)
-    return output
+    if a.add_table(table_name):
+        # Table created successfully
+        response = {
+            "message": f"Table '{table_name}' created successfully.",
+            "datetime": datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+        }
+        return response
+    else:
+        # Table already exists or error occurred
+        response = {
+            "error": f"Table '{table_name}' already exists or an error occurred.",
+            "datetime": datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+        }
+        return response
 
 
 @app.route("/add-data/<string:device_name>/<string:table_name>/<string:input_data>")

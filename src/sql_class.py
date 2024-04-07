@@ -73,26 +73,29 @@ class DataBase:
         """
         This function checks if a table exists only. Pre-req - the database must be checked first.
         """
-        sql = "SELECT * FROM sqlite_master WHERE type='table' ORDER BY name;"
+        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}';"
         output = self._send_sql(self.__database_name, sql)
-        if table_name in output['send_sql() return']['sql output']:
-            return True
-        else:
-            return False
+        print(f'check_table_exists() - {output}')
+        return 'send_sql() return' in output and output['send_sql() return']['sql output'] != []
 
-    def add_table(self, table_name: str) -> bool:
+
+    def add_table(self, table_name: str) -> json:
         """
         Prerequisite, check if database exists, then this will add a specific table.
         """
+        if self.check_table_exists(table_name):
+            print(f"Table '{table_name}' already exists.")
+            return False
+
         sql = "CREATE TABLE {} ({});".format(table_name, 'test_column VARCHAR(20)')
         output = self._send_sql(self.__database_name, sql)
-        if '' in output['send_sql() return': 'sql output']:
-            return True
+        if 'send_sql() return' in output and 'sql output' in output['send_sql() return']:
+            output_json = 'SELECT name FROM sqlite_master WHERE type="table" AND name=' + table_name + ';'
+            return {'_send_sql() return': {'sql output': f'{table_name}', 'sql': output_json}, 'datetime': datetime.now().strftime('%Y-%m-%d %H:%M')}
         else:
-            internal_error = "sql_class.add_table() error - {}".format(output)
-            logging.debug(internal_error)
-            print(internal_error)
-            return False
+            output_json = 'SELECT name FROM sqlite_master WHERE type="table" AND name=' + table_name + ';'
+            logging.debug(f"sql_class.add_table() error - {output}")
+            return {'_send_sql() return': {'sql output': f'{table_name}', 'sql': output_json}}
 
     def add_data_to_table(self, deviceid: str, table_name: str, inp: list) -> bool:
         """
@@ -204,6 +207,7 @@ class DataBase:
         """
         This function will return everything
         """
+        logging.debug(f'get_all() - - - ')
         # sql = f'show tables;'
         sql = f"SELECT name FROM sqlite_master WHERE type='table';"
         output = self._send_sql(self.__database_name, sql)
@@ -223,27 +227,37 @@ class DataBase:
 
     @staticmethod
     def _send_sql(database_name: str, sql: str) -> json:
-        print(">> send_sql()")
-        logging.debug(">> in send_sql..." + str(type(sql)) + sql)
+        """
+        This function actually sends to the db and returns the data in json format.
+        """
+        logging.debug(f">> in _send_sql()...{os.getcwd()} {str(type(sql))} - {sql}")
         try:
             connection = database.connect(database_name)
             # print("** connection {} ".format(connection.total_changes))
             mycursor = connection.cursor()
-            temp_output = mycursor.execute(sql).fetchone()
-            print(">> mycursor.execute output ", temp_output)
 
-            output = mycursor.fetchall()
+            # Check if the SQL statement starts with 'SELECT'
+            if sql.strip().upper().startswith('SELECT'):
+                mycursor.execute(sql)
+                output = mycursor.fetchall()
+                output_json = json.dumps(output)
+                logging.debug(f'_send_sql() SELECT- {output_json}')
+            else:
+                mycursor.execute(sql)
+                connection.commit()
+                output_json = 'Operation successful'  # Message indicating successful operation
+                logging.debug(f'_send_sql() OTHER- {output_json}')
 
-            connection.commit()
             mycursor.close()
             connection.close()
+            logging.info("send_sql(): statement sent - {}".format(sql))
+            now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+            out = {'send_sql() return': {'sql output': output_json, 'sql': sql, 'datetime': now}}
+            print(f">> send_sql output: {out}")
         # www.sqlite.org/rescode.html#extrc
         except ConnectionError as err:
             output = error_translation(err.errno)
-        logging.info("send_sql(): Sql done {}".format(sql))
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
-        print(">> send_sql(): SLQ CLASS: ", output)
-        output_json = json.dumps(output)
-        out = {'send_sql() return': {'sql output': output_json, 'sql': sql, 'datetime': now}}
-        print(">> send_sql output: ", out)
+            print(f'_send_sql() - Connection Error - {output}')
+        except Exception as err_all:
+            logging.error(f'_send_sql() - {err_all}')
         return out

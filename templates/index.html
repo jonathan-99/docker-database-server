@@ -14,22 +14,9 @@
 <p>Date of last entry</p>
 <br>
 <p>URLs available:</p>
-<embed id="embedded-file" type="text/html" src="static/table.html" width="500" height="200">
-<script>
-    window.onload = function() {
-        var embeddedFile = document.getElementById('embedded-file');
-        console.log("Embedded file element:", embeddedFile);
-        embeddedFile.onerror = function() {
-            console.log("Embedded file failed to load.");
-            var errorMessage = document.createElement('p');
-            errorMessage.textContent = 'Error: Embedded file not found. Please check the file path and try again.' + window.location.pathname;
-            console.log("Error message:", errorMessage.textContent);
-            document.body.appendChild(errorMessage);
-            embeddedFile.style.display = 'none'; // Hide the embed element
-        };
-    };
-</script>
+<embed id="embedded-file" type="text/html" src="table.html" width="500" height="200">
+<p>Next bit</p>
+<div id="embedded-table-html"></div>
 <p>End text.</p>
-</br>
 </body>
 </html>

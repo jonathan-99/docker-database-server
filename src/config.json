@@ -6,6 +6,6 @@
   "data": "data/",
   "simple-server-port": 7000,
   "logging-level": "logging.DEBUG",
-  "database-name": "src/database_name.db",
+  "database-name": "database_name.db",
   "test-database-name": "testing/database_name.db"
 }
