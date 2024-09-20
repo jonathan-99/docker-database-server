@@ -1,6 +1,39 @@
 # docker-database-server
 A dockerised, sqlite3 database with a front-end RESTapi written in python, deployed by ansible.
 
+## Set up as a service
+>sudo mkdir /opt/database-server  
+>sudo nano /etc/systemd/system/database-server.service  
+
+```
+[Unit]
+Description=Docker Database server application
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/opt/database-server
+ExecStart=/usr/bin/python3 /opt/database-server/docker-database-server/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+```
+
+> sudo systemctl daemon-reload  
+> sudo systemctl enable database-server  
+> sudo systemctl start database-server  
+> sudo systemctl status database-server  
+
+## Fault finding
+> journalctl -u database-server -f  
+
+
+
+
+
+
 ## Coverage.
 > pip install coverage
 > python -m coverage run -m unittest
