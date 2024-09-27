@@ -7,6 +7,7 @@ pipeline {
                 script {
                     echo 'Setting up environment'
                     sh '''
+                        #!/bin/bash
                         python3 --version
                         pip --version
                         python3 -m venv venv &&
