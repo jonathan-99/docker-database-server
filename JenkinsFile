@@ -15,15 +15,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Check Versions') {
-            steps {
-                script {
-                    // Additional version checks can be added here if needed
-                }
-            }
-        }
-
         stage('Setup Checks') {
             steps {
                 script {
