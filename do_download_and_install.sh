@@ -11,14 +11,13 @@ container_running() {
 # Check if the container already exists
 if docker ps -a --format '{{.Names}}' | grep -q $container_name; then
     echo "Container '$container_name' already exists."
-    CONTAINER_ID=$(docker ps --format '{{.ID}}' --filter "name=$container_name")
+    CONTAINER_ID=$(docker ps -aqf "name=$container_name")
 
     if [ "$(docker inspect --format '{{.State.Status}}' $CONTAINER_ID)" == "running" ]; then
         echo "Container is running, using the existing container..."
     else
         echo "Container is not running, starting it..."
         docker start $container_name
-        # Introduce a delay until the container is healthy
         sleep 20
     fi
 else
@@ -29,67 +28,49 @@ else
     sleep 20
 fi
 
-if [ -z "$CONTAINER_ID" ]; then
-    echo "Failed to create or retrieve container ID. Exiting."
-    exit 1
-fi
+# Verify the container exists and is running
+if docker ps -a --format '{{.Names}}' | grep -q $container_name; then
+    echo "** Container '$container_name' exists and is ready. Proceeding with package installation..."
 
-# Print container ID
-echo "** Container ID: $CONTAINER_ID"
-
-# Check if the container exists before executing commands
-if docker ps -a --format '{{.ID}}' | grep -q $CONTAINER_ID; then
-    echo "Container exists, proceeding with package installation..."
-
-    # Install necessary packages if they are not installed
-    echo "Installing necessary packages..."
-    docker exec $CONTAINER_ID bash -c 'which node npm python3 pip3 tsc curl wget' > /dev/null 2>&1
+    # Install necessary packages
+    docker exec $container_name bash -c 'which node npm python3 pip3 tsc curl wget' > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "Installing necessary packages..."
-        docker exec $CONTAINER_ID bash -c 'which python3' > /dev/null 2>&1 || docker exec $CONTAINER_ID apt-get install -y python3
-        docker exec $CONTAINER_ID bash -c 'which pip3' > /dev/null 2>&1 || docker exec $CONTAINER_ID apt-get install -y python3-pip
-        docker exec $CONTAINER_ID bash -c 'which curl' > /dev/null 2>&1 || docker exec $CONTAINER_ID apt-get install -y curl
-        docker exec $CONTAINER_ID bash -c 'which wget' > /dev/null 2>&1 || docker exec $CONTAINER_ID apt-get install -y wget
-        docker exec $CONTAINER_ID apt-get install -y --upgrade setuptools
+        docker exec $container_name apt-get install -y python3 python3-pip curl wget
+        docker exec $container_name apt-get install -y --upgrade setuptools
     else
         echo "Necessary packages are already installed."
     fi
 
     # Update and upgrade packages
-    docker exec $CONTAINER_ID apt-get update -y
-    docker exec $CONTAINER_ID apt-get upgrade -y
+    docker exec $container_name apt-get update -y
+    docker exec $container_name apt-get upgrade -y
 
     # Remove repository if already cloned
-    docker exec $CONTAINER_ID ls $repo_name &> /dev/null
-    if [ $? -eq 0 ]; then
+    if docker exec $container_name ls $repo_name &> /dev/null; then
         echo "Repository already exists in the container. Removing..."
-        docker exec $CONTAINER_ID rm -rf $repo_name
+        docker exec $container_name rm -rf $repo_name
     fi
 
     # Clone repository
     echo "Cloning repository..."
-    docker exec $CONTAINER_ID git clone https://github.com/jonathan-99/$repo_name.git $repo_name
+    docker exec $container_name git clone https://github.com/jonathan-99/$repo_name.git $repo_name
 
-
-    # Print OS version
+    # Display various information
     echo "OS Version:"
-    docker exec $CONTAINER_ID cat /etc/os-release
+    docker exec $container_name cat /etc/os-release
 
-    # Print Python version
     echo "Python Version:"
-    docker exec $CONTAINER_ID python3 --version
+    docker exec $container_name python3 --version
 
-    # Print unittest version
-    echo "unittest Version:"
-    docker exec $CONTAINER_ID python3 -m unittest
+    echo "Unittest Version:"
+    docker exec $container_name python3 -m unittest
 
-    # Print coverage version
-    echo "coverage Version:"
-    docker exec $CONTAINER_ID coverage --version
+    echo "Coverage Version:"
+    docker exec $container_name coverage --version
 
-    # Print Docker image ID
     echo "Docker Image ID:"
-    docker exec $CONTAINER_ID cat /proc/self/cgroup | grep "docker" | sed 's/^.*\///' | head -n 1
+    docker exec $container_name cat /proc/self/cgroup | grep "docker" | sed 's/^.*\///' | head -n 1
 
 else
     echo "Error: Container does not exist. Exiting."
