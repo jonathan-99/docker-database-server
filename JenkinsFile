@@ -3,33 +3,41 @@ pipeline {
 
     stages {
         stage('Initialize') {
-            stage('check versions') {
-                steps {
-                    script {
-                        // need to add a check on the image
-                        sh """
-                            echo "this is the npm version ${sh(script: 'git --version', returnStdout: true).trim()}"
-                            echo "this is the npm version ${sh(script: 'python --version', returnStdout: true).trim()}"
-                            echo "this is the npm version ${sh(script: 'sudo ufw status', returnStdout: true).trim()}"
-                            echo "this is the npm version ${sh(script: 'docker -v', returnStdout: true).trim()}"
-                        """
-                    }
-                }
-            }
-        }
-         stage('setup checks') {
             steps {
                 script {
+                    // need to add a check on the image
                     sh """
-                        file=jenkins_scripts/setup_checks.sh
-                        chmod +x jenkins_scripts/setup_checks.sh
-                        ls -l jenkins_scripts/setup_checks.sh
-                        script -q -c ./jenkins_scripts/setup_checks.sh /dev/null
+                        echo "this is the git version ${sh(script: 'git --version', returnStdout: true).trim()}"
+                        echo "this is the python version ${sh(script: 'python --version', returnStdout: true).trim()}"
+                        echo "this is the ufw status ${sh(script: 'sudo ufw status', returnStdout: true).trim()}"
+                        echo "this is the docker version ${sh(script: 'docker -v', returnStdout: true).trim()}"
                     """
                 }
             }
         }
-        stage('download and install docker image with dependencies') {
+
+        stage('Check Versions') {
+            steps {
+                script {
+                    // Additional version checks can be added here if needed
+                }
+            }
+        }
+
+        stage('Setup Checks') {
+            steps {
+                script {
+                    sh """
+                        file=jenkins_scripts/setup_checks.sh
+                        chmod +x \$file
+                        ls -l \$file
+                        script -q -c ./\$file /dev/null
+                    """
+                }
+            }
+        }
+
+        stage('Download and Install Docker Image with Dependencies') {
             steps {
                 script {
                     sh """
@@ -42,7 +50,8 @@ pipeline {
                 }
             }
         }
-        stage('unittest, PEP8, coverage report') {
+
+        stage('Unit Tests, PEP8, Coverage Report') {
             steps {
                 script {
                     sh """
@@ -55,7 +64,8 @@ pipeline {
                 }
             }
         }
-        stage('stop docker container'){
+
+        stage('Stop Docker Container') {
             steps {
                 script {
                     sh """
@@ -68,6 +78,7 @@ pipeline {
                 }
             }
         }
+
         stage('Cleanup') {
             steps {
                 script {
