@@ -3,19 +3,29 @@ pipeline {
 
     stages {
         stage('Initialize') {
+            stage('checks') {
+                steps {
+                    script {
+                        // need to add a check on the image
+                        sh """
+                            echo "this is the npm version ${sh(script: 'git --version', returnStdout: true).trim()}"
+                            echo "this is the npm version ${sh(script: 'python --version', returnStdout: true).trim()}"
+                            echo "this is the npm version ${sh(script: 'sudo ufw status', returnStdout: true).trim()}"
+                            echo "this is the npm version ${sh(script: 'docker -v', returnStdout: true).trim()}"
+                        """
+                    }
+                }
+            }
+        }
+         stage('setup 1') {
             steps {
                 script {
-                    echo 'Setting up environment'
-                    sh '''
-                        #!/bin/bash
-                        python3 --version
-                        pip --version
-                        python3 -m venv venv &&
-                        ( . venv/bin/activate && pip install -r requirements.txt )
-                    '''
-                    //    source venv/bin/activate &&
-                    //    pip install -r requirements.txt
-                    //'''
+                    sh """
+                        file=jenkins_scripts/setup_checks.sh
+                        chmod +x jenkins_scripts/setup_checks.sh
+                        ls -l jenkins_scripts/setup_checks.sh
+                        script -q -c ./jenkins_scripts/setup_checks.sh /dev/null
+                    """
                 }
             }
         }
