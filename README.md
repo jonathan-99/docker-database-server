@@ -34,7 +34,8 @@ If you want the jenkins build (which includes testing) when there is a change in
 ## Fault finding
 > journalctl -u database-server -f  
 
-
+## Logging of all testing output is here
+> /var/lib/jenkins/workspace/docker-database-server/test_output.log
 
 
 
