@@ -1,6 +1,7 @@
 #!/bin/bash
 
 container_name='docker-database-server'
+repo_name='docker-database-server'
 
 # Function to check if Docker container is running
 container_running() {
@@ -50,8 +51,6 @@ if docker ps -a --format '{{.ID}}' | grep -q $CONTAINER_ID; then
         docker exec $CONTAINER_ID bash -c 'which curl' > /dev/null 2>&1 || docker exec $CONTAINER_ID apt-get install -y curl
         docker exec $CONTAINER_ID bash -c 'which wget' > /dev/null 2>&1 || docker exec $CONTAINER_ID apt-get install -y wget
         docker exec $CONTAINER_ID apt-get install -y --upgrade setuptools
-        docker exec $CONTAINER_ID bash -c 'which RPI.GPIO' > /dev/null 2>&1 || docker exec $CONTAINER_ID apt-get install -y RPI.GPIO
-        docker exec $CONTAINER_ID bash -c 'which adafruit-blinka' > /dev/null 2>&1 || docker exec $CONTAINER_ID apt-get install -y adafruit-blinka
     else
         echo "Necessary packages are already installed."
     fi
@@ -60,25 +59,16 @@ if docker ps -a --format '{{.ID}}' | grep -q $CONTAINER_ID; then
     docker exec $CONTAINER_ID apt-get update -y
     docker exec $CONTAINER_ID apt-get upgrade -y
 
-    # Clone Anemometer using find
-    #if docker exec $CONTAINER_ID find /path/to/container/root -name 'anemometer' -type d | grep -q 'anemometer'; then
-    #    echo "FIND - Anemometer is already cloned in the container."
-    #else
-    #    echo "FIND - Cloning Anemometer repository..."
-    #    docker exec $CONTAINER_ID git clone https://github.com/jonathan-99/anemometer.git anemometer
-    #fi
-
-
-    # Remove Anemometer repository if already cloned
-    docker exec $CONTAINER_ID ls anemometer &> /dev/null
+    # Remove repository if already cloned
+    docker exec $CONTAINER_ID ls $repo_name &> /dev/null
     if [ $? -eq 0 ]; then
-        echo "Anemometer repository already exists in the container. Removing..."
-        docker exec $CONTAINER_ID rm -rf anemometer
+        echo "Repository already exists in the container. Removing..."
+        docker exec $CONTAINER_ID rm -rf $repo_name
     fi
 
-    # Clone Anemometer repository
-    echo "Cloning Anemometer repository..."
-    docker exec $CONTAINER_ID git clone https://github.com/jonathan-99/anemometer.git anemometer
+    # Clone repository
+    echo "Cloning repository..."
+    docker exec $CONTAINER_ID git clone https://github.com/jonathan-99/$repo_name.git $repo_name
 
 
     # Print OS version
