@@ -26,6 +26,11 @@ WantedBy=multi-user.target
 > sudo systemctl start database-server  
 > sudo systemctl status database-server  
 
+### Set up a crontab which checks for changes
+If you want the jenkins build (which includes testing) when there is a change in repo, then use this command:
+> 0 1 * * * cd /var/lib/jenkins/workspace/test_docker-database-server && [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ] && git fetch origin && curl -X POST http://192.168.1.135:8080/job/docker-database-server --user <insert name>:api token
+
+
 ## Fault finding
 > journalctl -u database-server -f  
 
