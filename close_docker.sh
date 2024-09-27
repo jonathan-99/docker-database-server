@@ -10,13 +10,13 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Define container name
 container_name='docker-database-server'
 
-# Stop the Docker container
-if [ -n "$(docker ps -q --filter "name=${container_name}")" ]; then
-    docker stop ${container_name}
-    echo "Docker container '${container_name}' stopped."
+# Stop and remove the Docker container if it exists
+if docker ps -a --format '{{.Names}}' | grep -q $container_name; then
+    echo "Stopping and removing container '$container_name'..."
+    docker stop $container_name
+    docker rm $container_name
 else
-    echo "Docker container '${container_name}' is not running."
+    echo "Container '$container_name' is not running."
 fi
