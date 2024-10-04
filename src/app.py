@@ -26,6 +26,7 @@ try:
     import os
     import handle_weather_data
     import route_details
+    import src.app_routes as app_routes
 except Exception as e:
     print("importing error: ", e)
 
@@ -69,8 +70,9 @@ def setup_swagger(app):
 
 
     @app.route("/get/<table_name>/<string:get_column>")
-    def api_get_data(table_name: str, get_column: str) -> json:
-        return route_details.get_data(table_name, get_column)
+    def route_get_column_details(table_name: str, get_column: str) -> json:
+        output = app_routes.api_get_data(table_name, get_column)
+        return output
 
     @app.route("/get-all-table")
     @swag_from({
@@ -83,25 +85,55 @@ def setup_swagger(app):
                         'type': 'string'
                     }
                 }
+            },
+            400: {
+                'description': 'Bad Request - The request could not be understood or was missing required parameters.',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'error': {
+                            'type': 'string',
+                            'example': 'Bad Request'
+                        },
+                        'message': {
+                            'type': 'string',
+                            'example': 'Invalid input'
+                        },
+                        'status': {
+                            'type': 'integer',
+                            'example': 400
+                        }
+                    }
+                }
+            },
+            500: {
+                'description': 'Internal Server Error - Something went wrong on the server.',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'error': {
+                            'type': 'string',
+                            'example': 'Internal Server Error'
+                        },
+                        'message': {
+                            'type': 'string',
+                            'example': 'An unexpected error occurred'
+                        },
+                        'status': {
+                            'type': 'integer',
+                            'example': 500
+                        }
+                    }
+                }
             }
         }
     })
-    def api_get_table_names():
+    def route_get_table_names():
         """
         Simple api to get all data from database through functions.py
         :return:
         """
-        logging.debug("Api_api_get_table_names()")
-        try:
-            a = sql_class.DataBase('main')
-            output = a.get_table_names()
-            return jsonify(output)
-        except FileNotFoundError as file_err:
-            logging.error(f'Error in api_get_table_names() - {file_err}')
-            return jsonify({"error": "Database file not found"}), 500
-        except Exception as err:
-            logging.error(f'Error in api_get_table_names() - {err}')
-            return jsonify({"error": "Internal Server Error"}), 500
+        app_routes.get_table_names()
 
     @app.route('/', methods=['GET', 'POST'])
     @swag_from({
@@ -114,68 +146,35 @@ def setup_swagger(app):
             }
         }
     })
-    def index():
+    def route_index():
         """
         Default index page which will show database stats: size, last entry.
         :return:
         """
-        try:
-            if request.method == 'POST':
-                print("POST request received")
-            elif request.method == 'GET':
-                print("GET request received")
-            else:
-                print("Unsupported request method")
-            return render_template("index.html")
-        except Exception as erro:
-            logging.error(f"Error processing index request: {erro}")
-            return "Internal Server Error", 500
+        app_routes.index()
 
     @app.route('/add-weather-data', methods=['POST'])
-    def process_json():
-        try:
-            data = request.json
-            source_ip = request.remote_addr
-
-            logging.debug(f'process_json() - POST from  {source_ip} - {datetime.datetime.now()}')
-
-            if data:
-                return_data = handle_weather_data.manage_weather_data(data, source_ip)
-                print(f'process_json() - here {return_data}')
-                return jsonify({"message": "Received correct JSON data", "data": data, "source_ip": source_ip}), 200
-            else:
-                return jsonify({"message": "Received wrong JSON data", "data": data, "source_ip": source_ip}), 200
-
-        except Exception as err:
-            logging.error(f"Error processing JSON data: {err}")
-            return jsonify({"error": "Invalid JSON data"}), 400
+    def route_process_json():
+        app_routes.process_json()
 
     @app.route("/create-table/<string:table_name>")
-    def api_create_table(table_name: str) -> json:
+    def route_create_table(table_name: str) -> json:
         """
         Simple api to get all data from database through functions.py
         :return:
         """
-        logging.debug('api_create_table')
-
-        a = sql_class.DataBase('main')
-        output = a.add_table(table_name)
-        print("api_create_table: ", output)
-        return output
+        return app_routes.api_create_table(table_name)
 
     @app.route("/add-data/<string:device_name>/<string:table_name>/<string:input_data>")
-    def api_add_data(deviceid: str, table_name: str, input_data: str) -> bool:
-        return route_details.add_data(deviceid, table_name, input_data, request)
+    def route_add_data(deviceid: str, table_name: str, input_data: str) -> bool:
+        return app_routes.api_add_data(deviceid, table_name, input_data)
 
     @app.route("/get/column-headers-from-this/<table_name>")
-    def api_get_column_headers(table_name: str) -> json:
+    def route_get_column_headers(table_name: str) -> json:
         """
         Get column headers from a specified table.
         """
-        logging.debug("api_get_column_headers")
-
-        a = sql_class.DataBase('main')
-        output = a.get_column_names_from_table(table_name)
+        output = app_routes.get_column_headers(table_name)
         # this might return a comma separated value that needs to be handled.
         return output
 
