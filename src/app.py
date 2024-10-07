@@ -190,6 +190,12 @@ def setup_swagger(inner_app):
         output = app_routes.get_column_headers(table_name)
         # this might return a comma separated value that needs to be handled.
         return output
+    """
+    # Define the route to serve Swagger JSON
+    @app.route('/swagger.json')
+    def swagger_json():
+        return jsonify(swagger_template)  # Assuming swagger_template is defined with the spec
+    """
 
     swagger_config = {
         'headers': [],
@@ -240,7 +246,7 @@ def setup_app():
         swagger = Swagger(app, template=swagger_template, config=swagger_config)
 
         # Ensure all endpoints are printed before running the app
-        logging.debug("List of endpoints:", get_endpoints())
+        logging.debug("List of endpoints:" + str(get_endpoints()))
     except Exception as setup_app_error:
         logging.error(f"Error initializing app: {setup_app_error}")
 
