@@ -12,10 +12,9 @@ try:
     import time
     import logging
     import flask
-    from flask import Flask, jsonify, request
-    from flask import render_template
-    from flask import send_from_directory
-    from flasgger import Swagger, LazyJSONEncoder, LazyString, swag_from
+    from flask import Flask, jsonify, request, render_template, send_from_directory
+    from flask.json.provider import DefaultJSONProvider
+    from flasgger import Swagger, LazyJSONEncoder, swag_from
     import src.functions as functions
     import src.incoming_data_class
     import src.injection_class
@@ -23,24 +22,38 @@ try:
     import src.class_file as class_file
     import json
     import jinja2
-    import os
     import handle_weather_data
     import route_details
     import src.app_routes as app_routes
 except Exception as e:
     print("importing error: ", e)
 
+
+class CustomJSONProvider(DefaultJSONProvider):
+    def default(self, obj):
+        try:
+            return super().default(obj)
+        except TypeError:
+            # Handle objects that cannot be serialized by converting them to string
+            return str(obj)
+
 app = flask.Flask(__name__, template_folder='../templates')
+# Set a custom JSON encoder (this adds the json_encoder attribute)
+app.json_encoder = CustomJSONProvider(app)
+
 # Configure root logger to log to console with DEBUG level
 logging.basicConfig(level=logging.DEBUG)
 # os.system('sudo /etc/init.d/mysql start')
 # setup_swagger(app)
 
-def setup_swagger(app):
+# Define Swagger setup function
+def setup_swagger(inner_app):
     """
     Reference for yml editor - https://editor.swagger.io/
     """
-    app.json_encoder = LazyJSONEncoder
+
+    # Assign the LazyJSONEncoder via the custom provider
+    app.json = CustomJSONProvider(inner_app)
 
     swagger_template = {
         'swagger': '2.0',
@@ -151,7 +164,7 @@ def setup_swagger(app):
         Default index page which will show database stats: size, last entry.
         :return:
         """
-        app_routes.index()
+        return app_routes.index()
 
     @app.route('/add-weather-data', methods=['POST'])
     def route_process_json():
@@ -167,7 +180,7 @@ def setup_swagger(app):
 
     @app.route("/add-data/<string:device_name>/<string:table_name>/<string:input_data>")
     def route_add_data(deviceid: str, table_name: str, input_data: str) -> bool:
-        return app_routes.api_add_data(deviceid, table_name, input_data)
+        return app_routes.api_add_data(deviceid, table_name, input_data, request)
 
     @app.route("/get/column-headers-from-this/<table_name>")
     def route_get_column_headers(table_name: str) -> json:
@@ -228,8 +241,8 @@ def setup_app():
 
         # Ensure all endpoints are printed before running the app
         logging.debug("List of endpoints:", get_endpoints())
-    except Exception as e:
-        logging.error(f"Error initializing app: {e}")
+    except Exception as setup_app_error:
+        logging.error(f"Error initializing app: {setup_app_error}")
 
 def run_app(port_numb=5000):
     try:
