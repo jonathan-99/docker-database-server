@@ -22,6 +22,7 @@ try:
     import src.class_file as class_file
     import json
     import jinja2
+    import uuid
     import handle_weather_data
     import route_details
     import src.app_routes as app_routes
@@ -168,7 +169,10 @@ def setup_swagger(inner_app):
 
     @app.route('/add-weather-data', methods=['POST'])
     def route_process_json():
-        app_routes.process_json()
+        traceid = str(uuid.uuid4())
+        response, status_code = app_routes.process_json(traceid)  # Pass trace ID down
+        response.headers['X-Trace-Id'] = traceid  # Add trace ID to response headers
+        return response, status_code
 
     @app.route("/create-table/<string:table_name>")
     def route_create_table(table_name: str) -> json:

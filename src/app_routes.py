@@ -96,7 +96,7 @@ def index():
         return "Internal Server Error", 500
 
 
-def process_json():
+def process_json(traceID: str):
     """
     /add-weather-data', methods=['POST']
     """
@@ -104,18 +104,21 @@ def process_json():
         data = request.json
         source_ip = request.remote_addr
 
-        logging.debug(f'process_json() - POST from  {source_ip} - {datetime.datetime.now()}')
+        logging.debug(f'process_json() - POST from  {source_ip} - {traceID} - {datetime.datetime.now()}')
 
         if data:
             return_data = handle_weather_data.manage_weather_data(data, source_ip)
             print(f'process_json() - here {return_data}')
-            return jsonify({"message": "Received correct JSON data", "data": data, "source_ip": source_ip}), 200
+            response = jsonify({"message": "Received correct JSON data", "traceid": traceID, "data": data, "source_ip": source_ip}), 200
+            return response, 200
         else:
-            return jsonify({"message": "Received wrong JSON data", "data": data, "source_ip": source_ip}), 200
+            response = jsonify({"message": "Received wrong JSON data", "traceid": traceID, "data": data, "source_ip": source_ip}), 200
+            return response, 200
 
     except Exception as err:
-        logging.error(f"Error processing JSON data: {err}")
-        return jsonify({"error": "Invalid JSON data"}), 400
+        logging.error(f"Error processing JSON data: {err} - traceID ={traceID}")
+        response = jsonify({"error": "Invalid JSON data", "traceid": traceID,})
+        return response, 400
 
 
 def api_create_table(table_name: str) -> json:
